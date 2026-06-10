@@ -1,0 +1,21 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "rewrites": [
+    { "source": "/greenops", "destination": "/index.html" },
+    { "source": "/shortages", "destination": "/shortages/index.html" },
+    { "source": "/api/orders/ingest", "destination": "/api/orders_ingest" },
+    { "source": "/api/day-sessions", "destination": "/api/shortage" },
+    { "source": "/api/sessions", "destination": "/api/shortage" },
+    { "source": "/api/shortages/parse", "destination": "/api/shortage" },
+    { "source": "/api/export-mancos", "destination": "/api/shortage" },
+    { "source": "/shortage/api/(.*)", "destination": "/api/shortage" },
+    { "source": "/api/work-sessions", "destination": "/api/work_sessions" },
+    { "source": "/api/(.*)", "destination": "/api/index" }
+  ],
+  "functions": {
+    "api/*.py": {
+      "includeFiles": "*.xlsx,*.xlsm,CMR/*",
+      "excludeFiles": "{output/**,.codex/**,web/**,__pycache__/**,*.eml}"
+    }
+  }
+}

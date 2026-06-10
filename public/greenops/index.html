@@ -1,0 +1,530 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OrderFlow</title>
+    <link rel="stylesheet" href="/styles.css">
+    <script src="/theme-manager.js"></script>
+  </head>
+  <body>
+    <section id="authScreen" class="auth-shell">
+      <div class="auth-backdrop"></div>
+      <section class="auth-card">
+        <p class="eyebrow">ORDERFLOW ACCESS</p>
+        <h1>Sign in to OrderFlow</h1>
+        <p class="auth-copy">Use your email and password to access orders, planning tools, and Manco control.</p>
+        <form id="loginForm" class="auth-form">
+          <label>
+            <span>Email</span>
+            <input id="loginEmail" type="email" autocomplete="username" required>
+          </label>
+          <label>
+            <span>Password</span>
+            <input id="loginPassword" type="password" autocomplete="current-password" required>
+          </label>
+          <button id="loginButton" type="submit">Sign in</button>
+        </form>
+        <p id="loginError" class="auth-error hidden" aria-live="polite"></p>
+      </section>
+    </section>
+
+    <main id="appShell" class="app-shell hidden">
+      <section class="hero">
+        <div class="hero-main">
+          <p class="eyebrow">ORDERFLOW CONTROL CENTER</p>
+          <h1 id="appLogo" style="cursor: pointer;" title="Return to session dashboard">OrderFlow</h1>
+          <div class="hero-info-card">
+            <div class="hero-info-block">
+              <span class="session-label">Logged In User</span>
+              <strong id="sessionUserName">-</strong>
+              <span id="sessionUserEmail" class="session-email">-</span>
+            </div>
+            <div class="hero-info-block">
+              <span class="session-label">Using Session</span>
+              <strong id="headerSessionName">No active session</strong>
+              <span id="headerSessionDate" class="session-email">Create or open a session.</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-side">
+          <div class="brand-stack">
+            <div class="brand-panel" aria-label="Hessing branding">
+              <div class="brand-lockup">
+                <span class="brand-main">HESSING</span>
+                <span class="brand-sub">supervers</span>
+              </div>
+            </div>
+            <div class="hero-action-row">
+              <a class="settings-button tool-link" href="/shortages/" title="Open Manco control">Manco´s</a>
+              <button id="settingsButton" class="settings-button" type="button" title="Settings" aria-label="Open settings">
+                <img src="/settings-icon.png" alt="Settings" class="settings-icon">
+                <span>Settings</span>
+              </button>
+              <button id="logoutButton" class="logout-button" type="button" title="Logout" aria-label="Logout">
+                <img src="/logout-icon.png" alt="Logout" class="logout-icon">
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+      <p id="statusText" class="visually-hidden" aria-live="polite">Waiting for an email file.</p>
+
+      <section id="dashboardPage">
+        <section class="dashboard-session-wrap">
+          <section class="card session-planner session-planner-horizontal">
+            <div class="session-planner-copy">
+              <p class="label">Work Session Creation</p>
+              <h2>Start today&apos;s planning session</h2>
+              <p class="laadschema-note">Choose the session day, keep the default plan name if it fits, and create the daily workspace before moving into Orders.</p>
+            </div>
+            <div class="session-planner-form-area">
+              <form id="workSessionForm" class="work-session-form">
+                <label>
+                  <span>Session Date</span>
+                  <input id="workSessionDate" type="date" required>
+                </label>
+                <label>
+                  <span>Session Name</span>
+                  <input id="workSessionName" type="text" required>
+                </label>
+                <button id="createWorkSessionButton" type="submit">Create Session</button>
+              </form>
+              <div id="sessionHistoryList" class="session-history-list">
+                <p class="history-empty state-meta">Loading history...</p>
+              </div>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section id="clientsPage" class="hidden">
+        <section class="clients-shell">
+          <section class="card clients-panel">
+            <div class="panel-header">
+              <div>
+                <p class="label">Clients</p>
+                <h2>Session clients</h2>
+                <p class="laadschema-note">Use the client cards to organise the daily plan created for this session.</p>
+              </div>
+            </div>
+            <div class="clients-layout">
+              <div id="clientCards" class="client-cards" aria-label="Client cards"></div>
+              <div class="clients-bottom-cards">
+                <section class="clients-leverschema-card">
+                  <p class="label">Leverschema</p>
+                  <h3>Planning Board</h3>
+                  <div class="clients-leverschema-actions">
+                    <button id="openLeverschemaFromClientsButton" type="button">Open Leverschema</button>
+                    <button id="exportLeverschemaFromClientsButton" type="button">Export Excel</button>
+                  </div>
+                </section>
+                <section class="clients-laadschema-card">
+                  <p class="label">Loading schedule</p>
+                  <h3>Loading Schedule</h3>
+                  <div class="clients-laadschema-actions">
+                    <button id="openLaadschemaButton" type="button">Open</button>
+                  </div>
+                </section>
+                <section class="clients-shortages-card">
+                  <p class="label">Manco´s</p>
+                  <h3>Manco Control</h3>
+                  <div class="clients-laadschema-actions">
+                    <a class="button-link" href="/shortages/">Open</a>
+                  </div>
+                </section>
+                <section class="clients-stock-card">
+                  <p class="label">Stock</p>
+                  <h3>Stock</h3>
+                  <div class="clients-laadschema-actions">
+                    <button id="openStockButton" type="button">Open</button>
+                  </div>
+                </section>
+              </div>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section id="stockPage" class="hidden">
+        <section class="orders-context-card">
+          <div>
+            <p class="label">Stock Workspace</p>
+            <h2>Stock</h2>
+            <p class="laadschema-note">Upload a Stock Excel file and review the selected inventory columns before exporting.</p>
+          </div>
+          <div class="orders-context-actions">
+            <button id="backToClientsFromStockButton" type="button">Back to Clients</button>
+            <button id="exportStockButton" type="button" disabled>Export Stock</button>
+          </div>
+        </section>
+
+        <section class="card stock-workspace">
+          <div class="stock-toolbar">
+            <label class="upload-button">
+              <input id="stockFileInput" type="file" accept=".xlsx,.xlsm">
+              <span>Upload Excel File</span>
+            </label>
+            <div class="stock-summary">
+              <p class="label">Rows loaded</p>
+              <strong id="stockRowsCount">0</strong>
+            </div>
+          </div>
+          <p id="stockStatusText" class="laadschema-note">No Stock file uploaded yet.</p>
+          <div class="table-wrap stock-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item number</th>
+                  <th>Product name</th>
+                  <th>Quantity</th>
+                  <th>Expiration Date</th>
+                </tr>
+              </thead>
+              <tbody id="stockTableBody">
+                <tr>
+                  <td colspan="4" class="empty-table-message">Upload an Excel file to show Stock rows.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="settingsPage" class="hidden">
+        <section class="clients-shell">
+          <section class="card clients-panel settings-panel">
+            <div class="panel-header">
+              <div>
+                <p class="label">Settings</p>
+                <h2>Client Actions</h2>
+                <p class="laadschema-note">Choose which action buttons should be visible in the Orders workspace for each client.</p>
+              </div>
+              <button id="backFromSettingsButton" type="button">Back</button>
+            </div>
+
+            <div class="settings-layout">
+              <section class="settings-selector-card">
+                <label>
+                  <span>Client</span>
+                  <select id="settingsClientSelect"></select>
+                </label>
+              </section>
+
+              <section class="settings-options-card">
+                <div id="settingsActionList" class="settings-action-list"></div>
+                <div id="haviUienSettingsCard" class="havi-uien-settings-card hidden">
+                  <div>
+                    <p class="label">HAVI DE UIEN</p>
+                    <h3>Manual article details</h3>
+                    <p class="laadschema-note">These values are used in the HAVI DE UIEN overview and export when the email does not contain article details.</p>
+                  </div>
+                  <div class="havi-uien-settings-grid">
+                    <label>
+                      <span>Article</span>
+                      <input id="haviUienArticleInput" type="text" placeholder="Article number">
+                    </label>
+                    <label>
+                      <span>Description</span>
+                      <input id="haviUienDescriptionInput" type="text" placeholder="Product description">
+                    </label>
+                  </div>
+                </div>
+              </section>
+            </div>
+          </section>
+        </section>
+      </section>
+
+      <section id="ordersPage" class="hidden">
+        <section class="card orders-context-card">
+          <div>
+            <p class="label">Orders Workspace</p>
+            <h2 id="ordersClientTitle">Carrefour</h2>
+            <p class="laadschema-note">Load an email, review the extracted orders, and export the correct Excel file for the selected client flow.</p>
+          </div>
+          <button id="backToClientsButton" type="button">Back to Clients</button>
+        </section>
+
+        <section class="actions">
+          <label class="upload-button">
+            <input id="emailInput" type="file" accept=".eml">
+            <span>Load Email File</span>
+          </label>
+          <select id="exportSheetSelect" class="hidden" aria-label="Export sheet selection">
+            <option value="Paderborn">Paderborn</option>
+            <option value="Rosbach">Rosbach</option>
+            <option value="Venlo">Venlo</option>
+          </select>
+          <button id="exportButton" disabled>Export to Excel</button>
+          <button id="mergeButton" disabled>Merge and Export</button>
+          <button id="saveOrderButton" disabled>Save order</button>
+          <button id="specialButton" disabled>Export HAVI DE UIEN</button>
+          <button id="nettoMdButton" disabled>NettoMD Orderpicking</button>
+          <button id="leverschemaButton" disabled>Leverschema</button>
+          <button id="printCmrButton" disabled>Print CMR</button>
+          <!-- Special CMR buttons for Havi 3 DCs -->
+          <div id="haviDcCmrButtons" class="havi-dc-cmr-buttons hidden">
+            <button id="printCmrDuisburgButton" disabled>Print CMR Duisburg</button>
+            <button id="printCmrWunstorfButton" disabled>Print CMR Wunstorf</button>
+            <button id="printCmrNeuWulmstorfButton" disabled>Print CMR Neu Wulmstorf</button>
+          </div>
+          <!-- Special CMR buttons for NettoMD 7 locations -->
+          <div id="nettomdCmrButtons" class="nettomd-cmr-buttons hidden">
+            <button id="nettomdCmrToggleButton" class="cmr-menu-toggle" type="button" aria-expanded="false">Print CMR &gt;</button>
+            <div id="nettomdCmrMenu" class="cmr-menu-options hidden">
+              <button id="printCmrKerpenButton" disabled>Kerpen</button>
+              <button id="printCmrHodenhagenButton" disabled>Hodenhagen</button>
+              <button id="printCmrHenstedtButton" disabled>Henstedt-Ulzburg</button>
+              <button id="printCmrHammButton" disabled>Hamm</button>
+              <button id="printCmrGanderkeseeButton" disabled>Ganderkesee</button>
+              <button id="printCmrBottropButton" disabled>Bottrop</button>
+              <button id="printCmrKrefeldButton" disabled>Krefeld</button>
+            </div>
+          </div>
+        </section>
+
+        <section class="stats">
+          <article class="card">
+            <p class="label">Customers Found</p>
+            <strong id="customersFound">0</strong>
+          </article>
+          <article class="card">
+            <p class="label">Items in Selection</p>
+            <strong id="itemsInSelection">0</strong>
+          </article>
+          <article class="card">
+            <p class="label">Delivery Date</p>
+            <strong id="deliveryDate">-</strong>
+          </article>
+        </section>
+
+        <section class="layout">
+          <aside class="delivery-sidebar" aria-label="Delivery point orders">
+            <section class="card delivery-point-card">
+              <div class="panel-header">
+                <div>
+                  <p class="label">Delivery points</p>
+                  <h2>Orders in email</h2>
+                </div>
+              </div>
+              <div id="deliveryPointList" class="delivery-point-list"></div>
+              <div id="deliveryReferenceList" class="delivery-reference-list"></div>
+            </section>
+          </aside>
+
+          <section class="table-panel">
+            <div class="panel-header">
+              <h2>Order Items</h2>
+              <button id="addItemButton" class="small-action-button" type="button" disabled>Add Item</button>
+            </div>
+            <div class="table-wrap">
+              <table>
+                <thead id="tableHead"></thead>
+                <tbody id="tableBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <aside class="sidebar hidden" aria-hidden="true">
+            <select id="orderSelect"></select>
+            <strong id="detailCustomer">-</strong>
+            <strong id="detailReference">-</strong>
+            <strong id="detailFatrans">-</strong>
+            <section id="leverschemaIncludeCard" class="hidden">
+              <h2>Include in Leverschema</h2>
+              <p class="laadschema-note">Choose which orders for this customer should be counted in PP.</p>
+              <div id="leverschemaIncludeList" class="leverschema-include-list"></div>
+            </section>
+            <section id="leverschemaSummaryCard" class="hidden">
+              <h2>Leverschema</h2>
+              <div class="detail-line"><span>Sheet</span><strong id="leverschemaSavedSheet">-</strong></div>
+              <div class="detail-line"><span>Rule</span><strong id="leverschemaRule">-</strong></div>
+              <div class="detail-line"><span>Total Pallets</span><strong id="leverschemaTotal">-</strong></div>
+              <div class="detail-line"><span>Total Pallet Places</span><strong id="leverschemaPlaces">-</strong></div>
+              <p id="leverschemaNote" class="laadschema-note">Load an email and click Leverschema to save the result for the selected sheet.</p>
+            </section>
+          </aside>
+        </section>
+      </section>
+
+      <section id="leverschemaPage" class="hidden">
+        <section class="orders-context-card">
+          <div>
+            <p class="label">Leverschema Workspace</p>
+            <h2>Planning Board</h2>
+            <p class="laadschema-note">Review the saved pallet places and export the workbook when ready.</p>
+          </div>
+          <button id="backFromLeverschemaButton" type="button">Back to Clients</button>
+        </section>
+
+        <section class="sheet-tabs">
+          <button class="sheet-tab active" type="button" data-sheet-tab="Monday-Thursday">Monday-Thursday</button>
+          <button class="sheet-tab" type="button" data-sheet-tab="Friday">Friday</button>
+          <button class="sheet-tab" type="button" data-sheet-tab="Saturday">Saturday</button>
+        </section>
+
+        <section class="table-panel">
+          <div class="panel-header">
+            <div>
+              <h2 id="leverschemaTableTitle">Monday-Thursday</h2>
+              <p id="leverschemaTableNote" class="laadschema-note">Saved Leverschema results are shown here in the same structure as the workbook sheet.</p>
+            </div>
+            <div class="panel-actions">
+              <button id="exportLeverschemaButton" type="button">Export Leverschema</button>
+              <button id="clearLeverschemaButton" type="button">Clear Pallet Memory</button>
+            </div>
+          </div>
+          <div class="table-wrap leverschema-table-wrap">
+            <table>
+              <thead id="leverschemaMasterHead"></thead>
+              <tbody id="leverschemaMasterBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="laadschemaPage" class="hidden">
+        <section class="orders-context-card">
+          <div>
+            <p class="label">Loading Schedule Workspace</p>
+            <h2>Outbound Loading Schedule</h2>
+            <p class="laadschema-note">Manage loading schedules and vehicle assignments.</p>
+          </div>
+          <div class="orders-context-actions">
+            <button id="backToClientsFromLaadschemaButton" type="button">← Back to Clients</button>
+            <button id="exportLaadschemaButton" type="button">Export Excel</button>
+          </div>
+        </section>
+        <section class="card laadschema-workspace">
+          <div class="laadschema-controls">
+            <div class="laadschema-date-controls">
+              <label for="laadschemaDaySelect">Day:</label>
+              <select id="laadschemaDaySelect">
+                <option value="Maandag">Monday</option>
+                <option value="Dinsdag">Tuesday</option>
+                <option value="Woensdag">Wednesday</option>
+                <option value="Donderdag">Thursday</option>
+                <option value="Vrijdag">Friday</option>
+                <option value="Zaterdag">Saturday</option>
+                <option value="Zondag">Sunday</option>
+              </select>
+              <label for="laadschemaDateInput">Date:</label>
+              <input type="date" id="laadschemaDateInput" />
+              <label for="laadschemaWeekInput">Week:</label>
+              <input type="number" id="laadschemaWeekInput" min="1" max="53" />
+            </div>
+            <div class="laadschema-action-controls">
+              <button id="addTruckButton" type="button" class="secondary-button">Add Truck</button>
+              <button id="clearLaadschemaButton" type="button" class="secondary-button">Clear Day</button>
+              <button id="clearAllLaadschemaButton" type="button" class="secondary-button">Clear All</button>
+            </div>
+          </div>
+          <div class="laadschema-table-container">
+            <table id="laadschemaTable" class="laadschema-table">
+              <thead id="laadschemaTableHead"></thead>
+              <tbody id="laadschemaTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <!-- Pakbon Upload Modal -->
+    <div id="cmrChoiceModal" class="modal hidden">
+      <div class="modal-backdrop" onclick="closeCmrChoiceModal()"></div>
+      <div class="modal-content cmr-choice-modal">
+        <div class="modal-header">
+          <h2>Print CMR</h2>
+          <button class="modal-close" onclick="closeCmrChoiceModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Do you want to print with or without Pakbon?</p>
+        </div>
+        <div class="modal-footer">
+          <button id="cmrWithPakbonButton" type="button" class="btn-primary">With</button>
+          <button id="cmrWithoutPakbonButton" type="button" class="btn-secondary">Without</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="pakbonModal" class="modal hidden">
+      <div class="modal-backdrop" onclick="closePakbonModal()"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Upload Pakbon (Invoices)</h2>
+          <button class="modal-close" onclick="closePakbonModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Upload one or more pakbon PDF files. Items with the same article number will be automatically summed.</p>
+          <input type="file" id="pakbonFileInput" accept=".pdf" multiple>
+          <div id="pakbonFileList" class="file-list"></div>
+          <div id="pakbonStatus" class="status-message"></div>
+          <div id="pakbonItemsPreview" class="items-preview hidden">
+            <h3>Parsed Items:</h3>
+            <table>
+              <thead>
+                <tr>
+                  <th>Article Number</th>
+                  <th>Description</th>
+                  <th>Quantity</th>
+                  <th>Unit</th>
+                </tr>
+              </thead>
+              <tbody id="pakbonItemsTable"></tbody>
+            </table>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button onclick="closePakbonModal()" class="btn-secondary">Cancel</button>
+          <button id="pakbonUploadButton" onclick="uploadPakbonFiles()" class="btn-primary">Parse & Export CMR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add Truck Modal -->
+    <div id="addTruckModal" class="modal hidden">
+      <div class="modal-backdrop" onclick="closeAddTruckModal()"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Add New Truck</h2>
+          <button class="modal-close" onclick="closeAddTruckModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Add a new truck column to the loading schedule table.</p>
+          <div class="work-session-form">
+            <label>
+              <span>Client Name (Freight)</span>
+              <input type="text" id="addTruckClientName" placeholder="Enter client name">
+            </label>
+            <label>
+              <span>Planned Departure Time</span>
+              <input type="time" id="addTruckPlannedTime">
+            </label>
+          </div>
+          <div id="addTruckStatus" class="status-message hidden"></div>
+        </div>
+        <div class="modal-footer">
+          <button onclick="closeAddTruckModal()" class="btn-secondary">Cancel</button>
+          <button onclick="confirmAddTruck()" class="btn-primary">Add Truck</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="confirmationModal" class="confirmation-modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirmationModalTitle">
+      <div class="confirmation-modal-backdrop" data-confirmation-cancel></div>
+      <div class="confirmation-modal-panel">
+        <p id="confirmationModalEyebrow" class="label">Confirm action</p>
+        <h2 id="confirmationModalTitle">Are you sure?</h2>
+        <p id="confirmationModalMessage">This action cannot be undone.</p>
+        <div class="confirmation-modal-actions">
+          <button id="confirmationCancelButton" type="button" class="btn-secondary">Cancel</button>
+          <button id="confirmationConfirmButton" type="button" class="btn-primary danger">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <script src="/app.js"></script>
+  </body>
+  </html>

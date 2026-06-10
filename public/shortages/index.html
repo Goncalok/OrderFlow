@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>OrderFlow Manco Control</title>
+    <link rel="stylesheet" href="styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar">
+        <div>
+          <p class="eyebrow">ORDERFLOW SHORTAGE CONTROL</p>
+          <h1>Manco Tracker</h1>
+        </div>
+        <nav class="topbar-actions" aria-label="Page navigation">
+          <a class="nav-button nav-link" href="/?page=clients">Back to OrderFlow</a>
+        </nav>
+      </section>
+
+      <section id="sessionsPage" class="sessions-page hidden">
+        <section class="panel session-create-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="label">OrderFlow session</p>
+              <h2>Use the active planning session</h2>
+            </div>
+            <span id="daySessionWeekday" class="day-pill">Shared sessions</span>
+          </div>
+          <p class="status-text">Create sessions on the OrderFlow home page. Manco´s uses those same sessions, so orders stay together in one workflow.</p>
+          <form id="daySessionForm" class="session-form hidden">
+            <label>
+              <span>Session date</span>
+              <input id="daySessionDate" type="date" required>
+            </label>
+            <label>
+              <span>Session name</span>
+              <input id="daySessionName" type="text" placeholder="Monday Manco review" required>
+            </label>
+            <button type="submit">Create session</button>
+          </form>
+        </section>
+
+        <section class="panel created-sessions-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="label">OrderFlow sessions</p>
+              <h2>Open a shared session</h2>
+            </div>
+          </div>
+          <div id="daySessionList" class="day-session-list"></div>
+        </section>
+      </section>
+
+      <section id="workspacePage" class="workspace hidden">
+        <section id="ordersSessionPanel" class="panel session-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="label">Active session</p>
+              <h2 id="activeSessionTitle">No session selected</h2>
+            </div>
+            <span id="selectedWeekday" class="day-pill">No date selected</span>
+          </div>
+
+          <form id="sessionForm" class="session-form">
+            <label>
+              <span>Active date</span>
+              <input id="sessionDate" type="date" required readonly>
+            </label>
+            <label>
+              <span>Active session name</span>
+              <input id="sessionName" type="text" placeholder="Monday Manco review" required readonly>
+            </label>
+            <div class="upload-grid">
+              <label class="upload-box">
+                <input id="emailInput" type="file" accept=".eml">
+                <span>Upload OrderFlow email order</span>
+              </label>
+              <label class="upload-box">
+                <input id="excelInput" type="file" accept=".xlsx,.xlsm,.csv">
+                <span>Upload Manco Excel file</span>
+              </label>
+            </div>
+            <button id="saveSessionButton" type="submit" disabled>Save session</button>
+          </form>
+          <p id="statusText" class="status-text">Choose a date and upload an OrderFlow email or Manco Excel file to start.</p>
+        </section>
+
+        <section class="panel preview-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="label">Recognition</p>
+              <h2 id="clientTitle">No file loaded</h2>
+            </div>
+            <div class="preview-actions">
+              <button id="backToHistoryButton" class="ghost-button hidden" type="button">Back to history</button>
+              <button id="exportMancosButton" class="ghost-button hidden" type="button">Export Manco´s</button>
+              <button id="quickUpdateButton" class="hidden" type="button">Update delivery point</button>
+              <span id="confidenceBadge" class="confidence-badge">0%</span>
+            </div>
+          </div>
+
+          <div class="metrics-grid">
+            <article>
+              <span>Delivery point</span>
+              <strong id="deliveryPoint">-</strong>
+            </article>
+            <article>
+              <span>Ordered quantity</span>
+              <strong id="orderedTotal">0</strong>
+            </article>
+            <article>
+              <span>Manco quantity</span>
+              <strong id="shortageTotal">0</strong>
+            </article>
+            <article class="accent-metric">
+              <span>Manco rate</span>
+              <strong id="shortageRate">0%</strong>
+            </article>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th id="dcHeaderCell" class="hidden">DC</th>
+                  <th>Article</th>
+                  <th>Description</th>
+                  <th>Ordered</th>
+                  <th>Delivered</th>
+                  <th>Manco</th>
+                  <th>Rate</th>
+                  <th class="shortage-filter-cell">
+                    <label class="shortage-only-toggle" title="Show only articles with Manco´s">
+                      <input id="shortageOnlyToggle" type="checkbox">
+                      <span>Manco´s only</span>
+                    </label>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="itemsBody">
+                <tr><td colspan="7" class="empty-cell">Upload a file to preview Manco lines.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="historyPage" class="panel history-panel">
+        <div class="panel-heading">
+          <div>
+            <p class="label">Session orders</p>
+            <h2 id="shortageSessionTitle">Orders added in this session</h2>
+          </div>
+          <div class="history-tools">
+            <label class="search-field hidden">
+              <span>Session date</span>
+              <input id="historyDate" type="date">
+            </label>
+            <button id="exportSelectedMancosButton" class="ghost-button" type="button" disabled>Export selected Manco´s</button>
+            <button id="analyticsButton" type="button">View Analytics</button>
+          </div>
+        </div>
+        <div id="historyDateList" class="history-date-list"></div>
+        <div id="historyList" class="history-list"></div>
+      </section>
+
+      <section id="analyticsPage" class="analytics-page hidden">
+        <section class="panel analytics-header-panel">
+          <div>
+            <p class="label">Analytics</p>
+            <h2 id="analyticsTitle">Session analytics</h2>
+          </div>
+          <div class="analytics-header-actions">
+            <button id="exportDayAnalyticsButton" type="button">Export Day</button>
+            <button id="backFromAnalyticsButton" class="ghost-button" type="button">Back to history</button>
+          </div>
+        </section>
+
+        <section class="analytics-grid">
+          <section class="panel analytics-wide-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="label">Client delivery overview</p>
+                <h2>Client performance</h2>
+              </div>
+            </div>
+            <div class="table-wrap analytics-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Client</th>
+                    <th>Ordered</th>
+                    <th>Delivered</th>
+                    <th>Manco</th>
+                    <th>Delivery %</th>
+                  </tr>
+                </thead>
+                <tbody id="clientOverviewBody"></tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="panel analytics-side-panel">
+            <div class="panel-heading">
+              <div>
+                <p class="label">Client Manco %</p>
+                <h2>Rate by client</h2>
+              </div>
+            </div>
+            <div id="clientRateBars" class="vertical-chart"></div>
+          </section>
+        </section>
+
+        <section class="panel top-articles-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="label">Top article Manco´s</p>
+              <h2>Articles in Manco by client</h2>
+            </div>
+            <div class="analytics-mini-stats">
+              <span>Top article</span>
+              <strong id="topArticleValue">-</strong>
+            </div>
+          </div>
+          <div class="top-article-layout">
+            <div>
+              <div id="topArticleBars" class="horizontal-chart"></div>
+              <div id="analyticsLegend" class="analytics-legend"></div>
+            </div>
+            <div class="table-wrap analytics-table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Rank</th>
+                    <th>Article</th>
+                    <th>Manco</th>
+                    <th>Clients</th>
+                  </tr>
+                </thead>
+                <tbody id="topArticlesBody"></tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+    <script src="app.js"></script>
+  </body>
+</html>

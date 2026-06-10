@@ -1,0 +1,12 @@
+/* Legacy Theme (Original Design)
+ * This file serves as the theme stylesheet for the original design.
+ * The original design styles are defined in styles.css
+ * This file is intentionally minimal as the base styles are already legacy.
+ */
+
+/* Legacy theme identifier - the base styles.css already contains the original design */
+:root[data-theme="legacy"] {
+  /* Original design color scheme */
+  --primary-bg: #efe6d8;
+  --primary-text: #1f342e;
+}
