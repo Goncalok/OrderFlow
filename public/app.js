@@ -353,6 +353,12 @@ settingsClientSelect.addEventListener("change", handleSettingsClientChange);
 settingsActionList.addEventListener("change", handleSettingsActionChange);
 haviUienArticleInput?.addEventListener("input", handleHaviUienSettingsInput);
 haviUienDescriptionInput?.addEventListener("input", handleHaviUienSettingsInput);
+window.addEventListener("focus", () => {
+  if (state.user) refreshTeamState();
+});
+document.addEventListener("visibilitychange", () => {
+  if (!document.hidden && state.user) refreshTeamState();
+});
 sheetTabButtons.forEach((button) => {
   button.addEventListener("click", () => {
     state.currentLeverschemaSheet = button.dataset.sheetTab;
@@ -576,7 +582,7 @@ async function refreshTeamState() {
     return;
   }
   try {
-    const response = await fetch("/api/work_sessions", { credentials: "include" });
+    const response = await fetch("/api/work_sessions", { credentials: "include", cache: "no-store" });
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
@@ -606,6 +612,11 @@ async function refreshTeamState() {
     const laadschemaChanged = oldLaadschemaStr !== JSON.stringify(state.laadschemaData);
     const customTrucksChanged = oldCustomTrucksStr !== JSON.stringify(state.laadschemaCustomTrucks);
     
+    if (sessionsChanged) {
+      renderSessionHistoryList();
+      updateHeaderAccountInfo();
+    }
+
     // If Laadschema data changed, re-render the table
     if (laadschemaChanged || customTrucksChanged) {
       console.log('🔄 Syncing Laadschema changes from server...');
@@ -659,6 +670,13 @@ async function refreshTeamState() {
           
           console.log('✅ Leverschema synchronized successfully');
         }
+      } else if (sessionsChanged) {
+        state.activeWorkSession = null;
+        state.clientWorkspaces = {};
+        updateHeaderAccountInfo();
+        if (state.currentPage === "clients") {
+          switchPage("dashboard");
+        }
       }
     }
     
@@ -680,14 +698,14 @@ function startTeamStateSync() {
   // Stop any existing sync
   stopTeamStateSync();
   
-  // Sync every 20 seconds
+  // Sync every 8 seconds so sessions created on another computer appear quickly.
   teamStateSyncInterval = setInterval(async () => {
-    if (state.activeWorkSession && state.user) {
+    if (state.user) {
       await refreshTeamState();
     }
-  }, 20000);
+  }, 8000);
   
-  console.log('Team state sync started (polling every 20 seconds)');
+  console.log('Team state sync started (polling every 8 seconds)');
 }
 
 function stopTeamStateSync() {
