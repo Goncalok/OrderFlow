@@ -81,7 +81,7 @@ def load_team_state() -> dict[str, Any]:
 
 
 def save_team_state(data: dict[str, Any]) -> None:
-    normalized = _coerce_team_state(data)
+    normalized = _merge_team_state(_load_current_team_state_for_merge(), data)
     if supabase_enabled():
         save_json_state(SUPABASE_STATE_KEY, normalized)
         return
@@ -96,6 +96,76 @@ def save_team_state(data: dict[str, Any]) -> None:
     tmp = LOCAL_TEAM_STATE_PATH.with_suffix(".json.tmp")
     tmp.write_text(payload, encoding="utf-8")
     tmp.replace(LOCAL_TEAM_STATE_PATH)
+
+
+def _load_current_team_state_for_merge() -> dict[str, Any]:
+    if supabase_enabled():
+        data = load_json_state(SUPABASE_STATE_KEY)
+        if isinstance(data, dict):
+            return _coerce_team_state(data)
+        return _coerce_team_state({})
+
+    url, token = _redis_rest_credentials()
+    if url and token:
+        raw = _upstash_get(url, token, REDIS_STATE_KEY)
+        if raw:
+            try:
+                data = json.loads(raw)
+                if isinstance(data, dict):
+                    return _coerce_team_state(data)
+            except json.JSONDecodeError:
+                pass
+        return _coerce_team_state({})
+
+    if LOCAL_TEAM_STATE_PATH.is_file():
+        try:
+            data = json.loads(LOCAL_TEAM_STATE_PATH.read_text(encoding="utf-8"))
+            if isinstance(data, dict):
+                return _coerce_team_state(data)
+        except (OSError, json.JSONDecodeError):
+            pass
+    return _coerce_team_state({})
+
+
+def _merge_team_state(existing: dict[str, Any], incoming: dict[str, Any]) -> dict[str, Any]:
+    current = _coerce_team_state(existing)
+    new = _coerce_team_state(incoming)
+    deleted_ids = {
+        str(value)
+        for value in incoming.get("deletedSessionIds", [])
+        if value is not None and str(value).strip()
+    }
+
+    sessions_by_id: dict[str, dict[str, Any]] = {}
+    for session in current["sessions"]:
+        session_id = str(session.get("id") or "").strip()
+        if session_id and session_id not in deleted_ids:
+            sessions_by_id[session_id] = session
+
+    for session in new["sessions"]:
+        session_id = str(session.get("id") or "").strip()
+        if not session_id or session_id in deleted_ids:
+            continue
+        previous = sessions_by_id.get(session_id)
+        if previous is None or _session_timestamp(session) >= _session_timestamp(previous):
+            sessions_by_id[session_id] = session
+
+    sessions = sorted(
+        sessions_by_id.values(),
+        key=lambda entry: str(entry.get("createdAt") or entry.get("updatedAt") or ""),
+        reverse=True,
+    )[:500]
+
+    return {
+        "sessions": sessions,
+        "leverschemaResults": {**current["leverschemaResults"], **new["leverschemaResults"]},
+        "laadschemaData": {**current["laadschemaData"], **new["laadschemaData"]},
+        "laadschemaCustomTrucks": {**current["laadschemaCustomTrucks"], **new["laadschemaCustomTrucks"]},
+    }
+
+
+def _session_timestamp(session: dict[str, Any]) -> str:
+    return str(session.get("updatedAt") or session.get("createdAt") or "")
 
 
 def _coerce_team_state(data: dict[str, Any]) -> dict[str, Any]:

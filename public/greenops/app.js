@@ -457,6 +457,7 @@ function mirrorSessionsToIndexedDB(sessions) {
 
 let teamStatePersistTimer = null;
 let teamStateSyncInterval = null;
+let deletedTeamSessionIds = [];
 
 function cancelScheduledTeamStatePersist() {
   if (teamStatePersistTimer) {
@@ -486,6 +487,7 @@ async function flushTeamStateToServer() {
     leverschemaResults: state.leverschemaResults,
     laadschemaData: state.laadschemaData,
     laadschemaCustomTrucks: state.laadschemaCustomTrucks,
+    deletedSessionIds: deletedTeamSessionIds,
   });
   
   console.log('📤 Sending team state to server...');
@@ -502,6 +504,7 @@ async function flushTeamStateToServer() {
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
+    deletedTeamSessionIds = [];
     console.log('✅ Team state sent successfully');
   } catch (err) {
     console.error("Team state cloud sync failed:", err);
@@ -717,6 +720,7 @@ function stopTeamStateSync() {
 }
 
 function upsertTeamSessionAndPersist(session) {
+  session.updatedAt = new Date().toISOString();
   const idx = state.teamSessions.findIndex((s) => s.id === session.id);
   if (idx >= 0) {
     state.teamSessions[idx] = session;
@@ -727,6 +731,7 @@ function upsertTeamSessionAndPersist(session) {
 }
 
 function deleteTeamSessionAndPersist(id) {
+  deletedTeamSessionIds = [...new Set([...deletedTeamSessionIds, id])];
   state.teamSessions = state.teamSessions.filter((s) => s.id !== id);
   schedulePersistTeamState();
 }
