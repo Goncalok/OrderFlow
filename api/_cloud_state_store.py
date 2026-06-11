@@ -98,8 +98,15 @@ def _normalize_supabase_url(value: str) -> str:
 
 
 def _supabase_headers(service_key: str) -> dict[str, str]:
-    return {
+    headers = {
         "apikey": service_key,
-        "Authorization": f"Bearer {service_key}",
         "Accept": "application/json",
     }
+    if _looks_like_legacy_jwt(service_key):
+        headers["Authorization"] = f"Bearer {service_key}"
+    return headers
+
+
+def _looks_like_legacy_jwt(value: str) -> bool:
+    token = str(value or "").strip()
+    return token.startswith("ey") and token.count(".") == 2
