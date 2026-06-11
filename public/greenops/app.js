@@ -459,6 +459,7 @@ function mirrorSessionsToIndexedDB(sessions) {
 let teamStatePersistTimer = null;
 let teamStateSyncInterval = null;
 let deletedTeamSessionIds = [];
+let workSessionCreateInFlight = false;
 
 function cancelScheduledTeamStatePersist() {
   if (teamStatePersistTimer) {
@@ -1109,6 +1110,8 @@ async function hydrateWorkSessionForUser() {
 async function handleWorkSessionCreate(event) {
   event.preventDefault();
   if (!state.user) return;
+  if (workSessionCreateInFlight) return;
+  workSessionCreateInFlight = true;
 
   const sessionDate = workSessionDate.value || formatDateForInput(new Date());
   const sessionName = (workSessionName.value || buildDefaultSessionName(sessionDate)).trim();
@@ -1159,6 +1162,7 @@ async function handleWorkSessionCreate(event) {
     statusText.textContent = err.message || "Session creation failed.";
     sessionHistoryList.innerHTML = `<p class="history-empty state-meta">${escapeHtml(statusText.textContent)}</p>`;
   } finally {
+    workSessionCreateInFlight = false;
     createWorkSessionButton.disabled = false;
   }
 }

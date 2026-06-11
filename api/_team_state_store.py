@@ -151,7 +151,7 @@ def _merge_team_state(existing: dict[str, Any], incoming: dict[str, Any]) -> dic
             sessions_by_id[session_id] = session
 
     sessions = sorted(
-        sessions_by_id.values(),
+        _dedupe_sessions_by_date_name(sessions_by_id.values()),
         key=lambda entry: str(entry.get("createdAt") or entry.get("updatedAt") or ""),
         reverse=True,
     )[:500]
@@ -166,6 +166,31 @@ def _merge_team_state(existing: dict[str, Any], incoming: dict[str, Any]) -> dic
 
 def _session_timestamp(session: dict[str, Any]) -> str:
     return str(session.get("updatedAt") or session.get("createdAt") or "")
+
+
+def _dedupe_sessions_by_date_name(sessions: Any) -> list[dict[str, Any]]:
+    kept: dict[tuple[str, str], dict[str, Any]] = {}
+    anonymous: list[dict[str, Any]] = []
+    for session in sessions:
+        if not isinstance(session, dict):
+            continue
+        date_value = str(session.get("date") or "").strip()
+        name_value = str(session.get("name") or "").strip().casefold()
+        if not date_value or not name_value:
+            anonymous.append(session)
+            continue
+        key = (date_value, name_value)
+        previous = kept.get(key)
+        if previous is None:
+            kept[key] = session
+            continue
+        previous_has_data = bool(previous.get("workspaces"))
+        session_has_data = bool(session.get("workspaces"))
+        if session_has_data and not previous_has_data:
+            kept[key] = session
+        elif session_has_data == previous_has_data and _session_timestamp(session) > _session_timestamp(previous):
+            kept[key] = session
+    return [*kept.values(), *anonymous]
 
 
 def _coerce_team_state(data: dict[str, Any]) -> dict[str, Any]:

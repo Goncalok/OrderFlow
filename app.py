@@ -193,6 +193,27 @@ def build_stock_export(items: list[dict[str, object]]) -> bytes:
     return output.getvalue()
 
 
+def _find_existing_work_session(state: dict[str, object], session_date: str, session_name: str) -> dict[str, object] | None:
+    target_name = session_name.strip().casefold()
+    sessions = state.get("sessions")
+    if not isinstance(sessions, list):
+        return None
+    matches = [
+        session
+        for session in sessions
+        if isinstance(session, dict)
+        and str(session.get("date") or "").strip() == session_date
+        and str(session.get("name") or "").strip().casefold() == target_name
+    ]
+    if not matches:
+        return None
+    return sorted(
+        matches,
+        key=lambda entry: str(entry.get("createdAt") or entry.get("updatedAt") or ""),
+        reverse=True,
+    )[0]
+
+
 class CombinedHandler(BaseHTTPRequestHandler):
     def do_GET(self) -> None:
         parsed = urlparse(self.path)
@@ -363,12 +384,22 @@ class CombinedHandler(BaseHTTPRequestHandler):
         except ValueError:
             json_response(self, {"error": "Please choose a valid session date."}, 400)
             return
+        session_name = str(payload.get("name") or f"Plan for {session_date}").strip()
+        try:
+            existing_state = load_team_state()
+        except OSError as exc:
+            json_response(self, {"error": f"Could not load team state: {exc}"}, 500)
+            return
+        existing_session = _find_existing_work_session(existing_state, session_date, session_name)
+        if existing_session:
+            json_response(self, {"session": existing_session, **existing_state})
+            return
         now = datetime.now().isoformat(timespec="seconds")
         session = {
             "id": str(uuid.uuid4()),
             "createdBy": str(user.get("email") or ""),
             "date": session_date,
-            "name": str(payload.get("name") or f"Plan for {session_date}").strip(),
+            "name": session_name,
             "createdAt": now,
             "updatedAt": now,
             "workspaces": {},
