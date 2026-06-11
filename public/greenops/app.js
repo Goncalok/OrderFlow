@@ -238,6 +238,7 @@ const backToClientsButton = document.getElementById("backToClientsButton");
 const workSessionForm = document.getElementById("workSessionForm");
 const workSessionDate = document.getElementById("workSessionDate");
 const workSessionName = document.getElementById("workSessionName");
+const createWorkSessionButton = document.getElementById("createWorkSessionButton");
 const sessionHistoryList = document.getElementById("sessionHistoryList");
 const ordersPage = document.getElementById("ordersPage");
 const leverschemaPage = document.getElementById("leverschemaPage");
@@ -1111,30 +1112,55 @@ async function handleWorkSessionCreate(event) {
 
   const sessionDate = workSessionDate.value || formatDateForInput(new Date());
   const sessionName = (workSessionName.value || buildDefaultSessionName(sessionDate)).trim();
-  const sessionId =
-    typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-      ? crypto.randomUUID()
-      : `${Date.now()}`;
-  const session = {
-    id: sessionId,
-    createdBy: state.user.email || "",
-    date: sessionDate,
-    name: sessionName,
-    createdAt: new Date().toISOString(),
-    workspaces: {},
-  };
+  createWorkSessionButton.disabled = true;
+  statusText.textContent = "Creating session...";
 
-  upsertTeamSessionAndPersist(session);
-  await persistTeamStateImmediately();
-  state.activeWorkSession = session;
-  state.clientWorkspaces = {};
+  try {
+    const response = await fetch("/api/work_sessions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ date: sessionDate, name: sessionName }),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(payload.error || `Session creation failed (HTTP ${response.status}).`);
+    }
 
-  updateHeaderAccountInfo();
-  loadClientWorkspace(state.selectedClient || DASHBOARD_CLIENTS[0]);
-  renderSessionHistoryList();
+    const session = payload.session;
+    if (!session?.id) {
+      throw new Error("Session creation failed: the server did not return a session.");
+    }
 
-  statusText.textContent = `${session.name} created.`;
-  switchPage("clients");
+    state.teamSessions = Array.isArray(payload.sessions) ? payload.sessions : [session, ...state.teamSessions];
+    state.leverschemaResults =
+      payload.leverschemaResults && typeof payload.leverschemaResults === "object" ? payload.leverschemaResults : state.leverschemaResults;
+    state.laadschemaData =
+      payload.laadschemaData && typeof payload.laadschemaData === "object" ? payload.laadschemaData : state.laadschemaData;
+    state.laadschemaCustomTrucks =
+      payload.laadschemaCustomTrucks && typeof payload.laadschemaCustomTrucks === "object"
+        ? payload.laadschemaCustomTrucks
+        : state.laadschemaCustomTrucks;
+
+    const storedSession = state.teamSessions.find((entry) => entry.id === session.id) || session;
+    state.activeWorkSession = storedSession;
+    state.clientWorkspaces = migrateClientWorkspaces(storedSession.workspaces || {});
+    state.activeWorkSession.workspaces = state.clientWorkspaces;
+    await mirrorSessionsToIndexedDB(state.teamSessions);
+
+    updateHeaderAccountInfo();
+    loadClientWorkspace(state.selectedClient || DASHBOARD_CLIENTS[0]);
+    renderSessionHistoryList();
+
+    statusText.textContent = `${session.name} created.`;
+    switchPage("clients");
+  } catch (err) {
+    console.error("Work session creation failed:", err);
+    statusText.textContent = err.message || "Session creation failed.";
+    sessionHistoryList.innerHTML = `<p class="history-empty state-meta">${escapeHtml(statusText.textContent)}</p>`;
+  } finally {
+    createWorkSessionButton.disabled = false;
+  }
 }
 
 function syncWorkSessionNameFromDate() {

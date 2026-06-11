@@ -29,8 +29,15 @@ def load_json_state(key: str) -> Any | None:
     try:
         with urllib.request.urlopen(req, timeout=25) as resp:
             payload = json.loads(resp.read().decode("utf-8"))
-    except (urllib.error.HTTPError, urllib.error.URLError, json.JSONDecodeError, TimeoutError):
-        return None
+    except urllib.error.HTTPError as exc:
+        detail = ""
+        try:
+            detail = exc.read().decode("utf-8", errors="replace")[:400]
+        except OSError:
+            pass
+        raise OSError(f"Supabase HTTP {exc.code} {detail}") from exc
+    except (urllib.error.URLError, json.JSONDecodeError, TimeoutError) as exc:
+        raise OSError(f"Supabase read failed: {exc}") from exc
     if not isinstance(payload, list) or not payload:
         return None
     value = payload[0].get("value") if isinstance(payload[0], dict) else None
@@ -42,7 +49,7 @@ def save_json_state(key: str, value: Any) -> None:
     if not url or not service_key:
         raise RuntimeError("Supabase credentials are not configured.")
 
-    endpoint = f"{url.rstrip('/')}/rest/v1/{SUPABASE_STATE_TABLE}"
+    endpoint = f"{url.rstrip('/')}/rest/v1/{SUPABASE_STATE_TABLE}?on_conflict=key"
     data = json.dumps(
         {
             "key": str(key),

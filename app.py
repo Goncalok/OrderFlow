@@ -238,6 +238,9 @@ class CombinedHandler(BaseHTTPRequestHandler):
         if path == "/api/logout":
             self._handle_logout()
             return
+        if path in {"/api/work_sessions", "/api/work-sessions"}:
+            self._handle_create_work_session()
+            return
         if path == "/api/parse":
             self._handle_greenops_parse()
             return
@@ -334,7 +337,51 @@ class CombinedHandler(BaseHTTPRequestHandler):
         if current_user_from_headers(dict(self.headers)) is None:
             unauthorized_response(self)
             return
-        json_response(self, load_team_state())
+        try:
+            state = load_team_state()
+        except OSError as exc:
+            json_response(self, {"error": f"Could not load team state: {exc}"}, 500)
+            return
+        json_response(self, state)
+
+    def _handle_create_work_session(self) -> None:
+        user = current_user_from_headers(dict(self.headers))
+        if user is None:
+            unauthorized_response(self)
+            return
+        try:
+            payload = json.loads(self._read_body(max_size=200_000).decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
+            json_response(self, {"error": "Invalid JSON body."}, 400)
+            return
+        if not isinstance(payload, dict):
+            json_response(self, {"error": "Body must be a JSON object."}, 400)
+            return
+        session_date = str(payload.get("date") or "").strip()
+        try:
+            date.fromisoformat(session_date)
+        except ValueError:
+            json_response(self, {"error": "Please choose a valid session date."}, 400)
+            return
+        now = datetime.now().isoformat(timespec="seconds")
+        session = {
+            "id": str(uuid.uuid4()),
+            "createdBy": str(user.get("email") or ""),
+            "date": session_date,
+            "name": str(payload.get("name") or f"Plan for {session_date}").strip(),
+            "createdAt": now,
+            "updatedAt": now,
+            "workspaces": {},
+        }
+        try:
+            save_team_state({"sessions": [session]})
+            state = load_team_state()
+        except OSError as exc:
+            json_response(self, {"error": f"Could not persist work session: {exc}"}, 500)
+            return
+        if not any(entry.get("id") == session["id"] for entry in state.get("sessions", [])):
+            state["sessions"] = [session, *state.get("sessions", [])]
+        json_response(self, {"session": session, **state})
 
     def _handle_put_work_sessions(self) -> None:
         if current_user_from_headers(dict(self.headers)) is None:
@@ -350,8 +397,8 @@ class CombinedHandler(BaseHTTPRequestHandler):
             return
         try:
             save_team_state(payload)
-        except OSError:
-            json_response(self, {"error": "Could not persist team state."}, 500)
+        except OSError as exc:
+            json_response(self, {"error": f"Could not persist team state: {exc}"}, 500)
             return
         json_response(self, {"ok": True})
 
