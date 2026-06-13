@@ -21,6 +21,7 @@ class handler(BaseHTTPRequestHandler):
             session_date = str(fields.get("date") or "").strip()
             session_name = str(fields.get("name") or "").strip()
             work_session_id = str(fields.get("workSessionId") or "").strip()
+            selected_client = str(fields.get("selectedClient") or "").strip()
             if not session_date:
                 json_response(self, {"error": "Open a daily session before uploading an email."}, 400)
                 return
@@ -46,7 +47,7 @@ class handler(BaseHTTPRequestHandler):
                 json_response(self, {"error": "OrderFlow did not return an order preview."}, 400)
                 return
 
-            shortage_previews = build_shortage_previews(file_name, mode, greenops_preview)
+            shortage_previews = build_shortage_previews(file_name, mode, greenops_preview, selected_client)
             if not shortage_previews:
                 json_response(self, {"error": "No order lines were found in this email."}, 400)
                 return

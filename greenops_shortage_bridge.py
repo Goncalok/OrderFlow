@@ -14,7 +14,8 @@ UNKNOWN_POINT = "Unknown delivery point"
 MAIN_POINT = "Main delivery point"
 
 
-def build_shortage_previews(file_name: str, mode: str, greenops_preview: dict[str, Any]) -> list[dict[str, Any]]:
+def build_shortage_previews(file_name: str, mode: str, greenops_preview: dict[str, Any], selected_client: str = "") -> list[dict[str, Any]]:
+    selected_client = _clean_selected_client(selected_client)
     if mode == "special":
         special_orders = greenops_preview.get("specialOrders")
         if isinstance(special_orders, list):
@@ -38,7 +39,7 @@ def build_shortage_previews(file_name: str, mode: str, greenops_preview: dict[st
         if not isinstance(order, dict):
             continue
         order_file_name = str(order.get("sourceFileName") or file_name).strip() or file_name
-        preview = _build_order_preview(order_file_name, mode, greenops_preview, order, index)
+        preview = _build_order_preview(order_file_name, mode, greenops_preview, order, index, selected_client)
         if preview["items"]:
             previews.append(preview)
     return previews
@@ -198,11 +199,15 @@ def _build_order_preview(
     greenops_preview: dict[str, Any],
     order: dict[str, Any],
     order_index: int,
+    selected_client: str = "",
 ) -> dict[str, Any]:
     customer = str(order.get("customer") or "").strip()
     fatrans = str(order.get("fatrans") or "").strip()
     reference = str(order.get("reference") or "").strip()
     client, point, confidence = _infer_client_delivery(file_name, customer, fatrans, reference)
+    if selected_client and _is_unknown_client(client):
+        client = selected_client
+        confidence = max(confidence, 95)
     explicit_point = str(order.get("deliveryPoint") or "").strip()
     if explicit_point:
         point = explicit_point
@@ -356,6 +361,28 @@ def _infer_client_delivery(file_name: str, *parts: str) -> tuple[str, str, int]:
             client = guessed
             confidence = max(confidence, 50)
     return client, point, min(confidence, 95)
+
+
+def _clean_selected_client(value: str) -> str:
+    text = re.sub(r"\s+", " ", str(value or "").strip())
+    if not text:
+        return ""
+    lowered = text.casefold()
+    if lowered in {"denemark", "denmark"}:
+        return "Denemark"
+    if lowered == "havi":
+        return "HAVI"
+    if lowered == "nettomd":
+        return "NettoMD"
+    if lowered == "colruyt saturday":
+        return "Colruyt"
+    if lowered == "havi duisburg saturday":
+        return "HAVI"
+    return text
+
+
+def _is_unknown_client(value: str) -> bool:
+    return str(value or "").strip().casefold() in {"", UNKNOWN_CLIENT.casefold(), "unknown customer"}
 
 
 def _fallback_delivery_point(context: str) -> str:

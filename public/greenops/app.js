@@ -1995,6 +1995,7 @@ async function saveOrdersForShortages(file, options = {}) {
   formData.append("date", targetSession.date || "");
   formData.append("name", targetSession.name || "");
   formData.append("workSessionId", targetSession.id || "");
+  formData.append("selectedClient", options.selectedClient || state.selectedClient || "");
 
   try {
     const response = await fetch("/api/orders/ingest", {
