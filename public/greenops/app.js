@@ -279,8 +279,10 @@ tableBody.addEventListener("click", handleDeleteItem);
 leverschemaIncludeList.addEventListener("change", handleLeverschemaIncludeChange);
 deliveryPointList?.addEventListener("click", handleDeliveryPointClick);
 deliveryPointList?.addEventListener("change", handleDeliveryReferenceToggle);
+deliveryPointList?.addEventListener("click", handleDeliveryOrderDelete);
 deliveryPointList?.addEventListener("click", handleDeliveryReferenceClick);
 deliveryReferenceList?.addEventListener("change", handleDeliveryReferenceToggle);
+deliveryReferenceList?.addEventListener("click", handleDeliveryOrderDelete);
 deliveryReferenceList?.addEventListener("click", handleDeliveryReferenceClick);
 leverschemaMasterBody.addEventListener("click", handleLeverschemaRowClear);
 orderSelect.addEventListener("change", () => {
@@ -2622,6 +2624,142 @@ function handleDeliveryReferenceClick(event) {
   renderPreview();
 }
 
+async function handleDeliveryOrderDelete(event) {
+  const button = event.target.closest("[data-delete-delivery-order-index]");
+  if (!button || !state.preview) return;
+  event.preventDefault();
+  event.stopPropagation();
+
+  const index = Number(button.dataset.deleteDeliveryOrderIndex);
+  const order = getWorkspaceOrderAtIndex(index);
+  if (!order) return;
+  const reference = getOrderReferenceForRemoval(order, index);
+  const shouldDelete = await showConfirmationDialog({
+    eyebrow: "Delete order",
+    title: "Delete this order?",
+    message: `${reference} will be removed from this card and from Manco's.`,
+    confirmLabel: "Delete order",
+    cancelLabel: "Cancel",
+  });
+  if (!shouldDelete) return;
+
+  const removalIdentity = buildMancoRemovalIdentity(order, index);
+  removeWorkspaceOrderAtIndex(index);
+  syncCurrentClientWorkspace();
+  await persistTeamStateImmediately();
+  renderPreview();
+  renderLeverschemaSummary();
+  renderLeverschemaWorkbook();
+
+  const mancoMessage = await removeOrderFromMancos(removalIdentity);
+  statusText.textContent = [`${reference} deleted.`, mancoMessage].filter(Boolean).join(" ");
+}
+
+function getWorkspaceOrderAtIndex(index) {
+  if (!state.preview || !Number.isInteger(index) || index < 0) return null;
+  if (state.mode === "special") {
+    const entries = getSpecialOrderEntries();
+    return entries[index]?.order || null;
+  }
+  return state.preview.orders?.[index] || null;
+}
+
+function removeWorkspaceOrderAtIndex(index) {
+  if (state.mode === "special") {
+    const specialOrders = Array.isArray(state.preview.specialOrders)
+      ? [...state.preview.specialOrders]
+      : [stripSpecialOrders(state.preview)];
+    specialOrders.splice(index, 1);
+    if (!specialOrders.length) {
+      state.preview = null;
+      state.mode = null;
+      state.selectedIndex = 0;
+      state.orderSelectionActive = false;
+      state.activeDeliveryPointKey = null;
+      state.leverschemaIncludedIndexes = [];
+      return;
+    }
+    state.selectedIndex = Math.min(state.selectedIndex, specialOrders.length - 1);
+    state.preview = selectSpecialPreview({ ...state.preview, specialOrders }, state.selectedIndex);
+    state.leverschemaIncludedIndexes = remapIndexesAfterRemoval(state.leverschemaIncludedIndexes, index);
+    return;
+  }
+
+  const orders = Array.isArray(state.preview?.orders) ? [...state.preview.orders] : [];
+  orders.splice(index, 1);
+  if (!orders.length) {
+    state.preview = null;
+    state.mode = null;
+    state.selectedIndex = 0;
+    state.orderSelectionActive = false;
+    state.activeDeliveryPointKey = null;
+    state.leverschemaIncludedIndexes = [];
+    return;
+  }
+  state.preview = {
+    ...state.preview,
+    orders,
+    customerCount: orders.length,
+    canMerge: orders.length > 0,
+  };
+  state.selectedIndex = Math.min(state.selectedIndex >= index ? Math.max(state.selectedIndex - 1, 0) : state.selectedIndex, orders.length - 1);
+  state.leverschemaIncludedIndexes = remapIndexesAfterRemoval(state.leverschemaIncludedIndexes, index);
+  const selectedKey = getDeliveryPointKeyForIndex(state.selectedIndex);
+  const groupStillExists = getDeliveryPointGroups().some((group) => group.key === state.activeDeliveryPointKey);
+  state.activeDeliveryPointKey = groupStillExists ? state.activeDeliveryPointKey : selectedKey;
+}
+
+function remapIndexesAfterRemoval(indexes, removedIndex) {
+  return [...new Set((indexes || [])
+    .filter((index) => index !== removedIndex)
+    .map((index) => (index > removedIndex ? index - 1 : index)))]
+    .sort((left, right) => left - right);
+}
+
+function getOrderReferenceForRemoval(order, index) {
+  if (state.mode === "special") return getSpecialOrderReference(order, index);
+  return String(order?.reference || order?.label || `Order ${index + 1}`).trim();
+}
+
+function buildMancoRemovalIdentity(order, index) {
+  const displayOrder = state.mode === "standard" ? applyStandardClientDisplayRules(order) : order;
+  const reference = getOrderReferenceForRemoval(order, index);
+  const hasReference = Boolean(reference && !/^order\s+\d+$/i.test(reference));
+  return {
+    date: state.activeWorkSession?.date || "",
+    workSessionId: state.activeWorkSession?.id || "",
+    reference,
+    customer: hasReference ? "" : String(order?.customer || displayOrder?.customer || "").trim(),
+    fatrans: hasReference ? "" : String(order?.fatrans || displayOrder?.fatrans || "").trim(),
+    deliveryPoint: hasReference ? "" : getDeliveryPointKey(displayOrder),
+  };
+}
+
+async function removeOrderFromMancos(identity) {
+  if (!identity?.workSessionId && !identity?.date) return "";
+  try {
+    const response = await fetch("/api/orders/remove", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify(identity),
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (response.status === 401) {
+      resetPreviewState();
+      showAuthScreen();
+      return "Sign in again to update Manco's.";
+    }
+    if (!response.ok) {
+      return payload.error || "Could not remove this order from Manco's.";
+    }
+    const removed = Number(payload.removed || 0);
+    return removed ? "Removed from Manco's." : "No matching Manco's order was found.";
+  } catch {
+    return "Could not reach Manco's sync.";
+  }
+}
+
 function renderDeliverySidebar() {
   if (!deliveryPointList || !deliveryReferenceList) return;
 
@@ -2686,6 +2824,7 @@ function renderStandardDeliveryReference({ order, index }) {
         <strong>${escapeHtml(reference)}</strong>
         <span>${escapeHtml(`${order.items?.length || 0} items`)}</span>
       </button>
+      <button class="delivery-reference-delete" type="button" data-delete-delivery-order-index="${index}" aria-label="Delete ${escapeHtml(reference)}">Delete</button>
     </div>
   `;
 }
@@ -2730,6 +2869,7 @@ function renderSpecialDeliveryReference({ order, index }) {
         <strong>${escapeHtml(reference)}</strong>
         <span>${escapeHtml(`${order.items?.length || 0} items`)}</span>
       </button>
+      <button class="delivery-reference-delete" type="button" data-delete-delivery-order-index="${index}" aria-label="Delete ${escapeHtml(reference)}">Delete</button>
     </div>
   `;
 }

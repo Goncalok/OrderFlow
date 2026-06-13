@@ -3205,6 +3205,29 @@ table {
   font-size: 13px;
 }
 
+.delivery-reference-option {
+  grid-template-columns: 22px minmax(0, 1fr) auto;
+}
+
+.delivery-reference-option .delivery-reference-delete {
+  justify-self: end;
+  align-self: center;
+  border: 1px solid #efc8bd;
+  border-radius: 8px;
+  background: #fff7f3;
+  color: #a43c2d;
+  padding: 7px 9px;
+  font-size: 12px;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.delivery-reference-option .delivery-reference-delete:hover {
+  border-color: #d99686;
+  background: #ffece6;
+  color: #832b22;
+}
+
 table th,
 .items-preview table th {
   padding: 10px 12px;

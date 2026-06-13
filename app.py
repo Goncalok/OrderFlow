@@ -34,7 +34,7 @@ from api._shared import (
     read_uploaded_file,
 )
 from api._team_state_store import load_team_state, save_team_state
-from greenops_shortage_bridge import build_shortage_previews, save_previews_as_sessions
+from greenops_shortage_bridge import build_shortage_previews, remove_preview_sessions, save_previews_as_sessions
 from shortage_app import (
     as_number,
     build_day_analytics_workbook,
@@ -285,6 +285,9 @@ class CombinedHandler(BaseHTTPRequestHandler):
             return
         if path == "/api/orders/ingest":
             self._handle_order_ingest()
+            return
+        if path == "/api/orders/remove":
+            self._handle_order_remove()
             return
         if path == "/api/shortages/parse":
             self._handle_shortage_parse()
@@ -701,6 +704,44 @@ class CombinedHandler(BaseHTTPRequestHandler):
             json_response(self, {"error": str(exc)}, 400)
         except Exception as exc:
             json_response(self, {"error": f"Could not ingest OrderFlow email: {exc}"}, 400)
+
+    def _handle_order_remove(self) -> None:
+        if current_user_from_headers(dict(self.headers)) is None:
+            unauthorized_response(self)
+            return
+        try:
+            payload = json.loads(self._read_body(max_size=200_000).decode("utf-8"))
+        except (UnicodeDecodeError, json.JSONDecodeError, ValueError):
+            json_response(self, {"error": "Invalid JSON body."}, 400)
+            return
+        if not isinstance(payload, dict):
+            json_response(self, {"error": "Body must be a JSON object."}, 400)
+            return
+        session_date = str(payload.get("date") or "").strip()
+        work_session_id = str(payload.get("workSessionId") or "").strip()
+        reference = str(payload.get("reference") or "").strip()
+        customer = str(payload.get("customer") or "").strip()
+        fatrans = str(payload.get("fatrans") or "").strip()
+        delivery_point = str(payload.get("deliveryPoint") or "").strip()
+        if not session_date and not work_session_id:
+            json_response(self, {"error": "Missing work session context."}, 400)
+            return
+        if not any([reference, customer, fatrans, delivery_point]):
+            json_response(self, {"error": "Missing order identity."}, 400)
+            return
+        try:
+            removed, sessions = remove_preview_sessions(
+                session_date=session_date,
+                work_session_id=work_session_id,
+                reference=reference,
+                customer=customer,
+                fatrans=fatrans,
+                delivery_point=delivery_point,
+            )
+        except Exception as exc:
+            json_response(self, {"error": f"Could not remove order from Manco's: {exc}"}, 400)
+            return
+        json_response(self, {"removed": removed, "sessions": sessions})
 
     def _handle_shortage_parse(self) -> None:
         try:

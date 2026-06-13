@@ -89,6 +89,75 @@ def save_previews_as_sessions(
     return saved, sessions[:1000]
 
 
+def remove_preview_sessions(
+    *,
+    session_date: str,
+    work_session_id: str = "",
+    reference: str = "",
+    customer: str = "",
+    fatrans: str = "",
+    delivery_point: str = "",
+) -> tuple[int, list[dict[str, Any]]]:
+    sessions = load_sessions()
+    kept: list[dict[str, Any]] = []
+    removed = 0
+    for session in sessions:
+        if _matches_removal_target(
+            session,
+            session_date=session_date,
+            work_session_id=work_session_id,
+            reference=reference,
+            customer=customer,
+            fatrans=fatrans,
+            delivery_point=delivery_point,
+        ):
+            removed += 1
+            continue
+        kept.append(session)
+    if removed:
+        save_sessions(kept[:1000])
+    return removed, kept[:1000]
+
+
+def _matches_removal_target(
+    session: dict[str, Any],
+    *,
+    session_date: str,
+    work_session_id: str,
+    reference: str,
+    customer: str,
+    fatrans: str,
+    delivery_point: str,
+) -> bool:
+    if work_session_id and str(session.get("workSessionId") or "") != work_session_id:
+        return False
+    if session_date and str(session.get("date") or "") != session_date:
+        return False
+    preview = session.get("preview")
+    if not isinstance(preview, dict):
+        return False
+
+    target_reference = reference.strip().casefold()
+    target_customer = customer.strip().casefold()
+    target_fatrans = fatrans.strip().casefold()
+    target_point = delivery_point.strip().casefold()
+
+    preview_reference = str(preview.get("greenopsReference") or "").strip().casefold()
+    preview_customer = str(preview.get("greenopsCustomer") or preview.get("client") or "").strip().casefold()
+    preview_fatrans = str(preview.get("greenopsFatrans") or "").strip().casefold()
+    preview_point = str(preview.get("deliveryPoint") or "").strip().casefold()
+
+    if target_reference and preview_reference != target_reference:
+        return False
+    if target_customer and preview_customer != target_customer:
+        return False
+    if target_fatrans and preview_fatrans != target_fatrans:
+        return False
+    if target_point and preview_point != target_point:
+        return False
+    return bool(target_reference or target_customer or target_fatrans or target_point)
+
+
 def _refresh_existing_session_metadata(session: dict[str, Any], preview: dict[str, Any]) -> None:
     existing_preview = session.get("preview")
     if not isinstance(existing_preview, dict):

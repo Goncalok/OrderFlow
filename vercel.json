@@ -4,6 +4,7 @@
     { "source": "/greenops", "destination": "/index.html" },
     { "source": "/shortages", "destination": "/shortages/index.html" },
     { "source": "/api/orders/ingest", "destination": "/api/orders_ingest" },
+    { "source": "/api/orders/remove", "destination": "/api/orders_remove" },
     { "source": "/api/day-sessions", "destination": "/api/shortage" },
     { "source": "/api/sessions", "destination": "/api/shortage" },
     { "source": "/api/shortages/parse", "destination": "/api/shortage" },
