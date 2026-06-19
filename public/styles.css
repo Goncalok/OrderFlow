@@ -4873,3 +4873,292 @@ body {
     font-size: 42px !important;
   }
 }
+
+/* Premium Control Center correction.
+   The previous pass was too dramatic; this layer makes the app feel like a
+   focused executive operations dashboard. */
+body {
+  background:
+    linear-gradient(180deg, #eef5f0 0, #f7faf8 280px, #f6f9f7 100%) !important;
+  color: #071f17 !important;
+}
+
+.app-shell {
+  width: min(1680px, calc(100% - 36px)) !important;
+  padding: 16px 0 34px !important;
+}
+
+.hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 18px !important;
+  min-height: 148px !important;
+  padding: 22px 24px !important;
+  border: 1px solid rgba(7, 31, 23, 0.1) !important;
+  border-radius: 12px !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, #082d22, #0b5b3d) !important;
+  box-shadow: 0 18px 42px rgba(7, 31, 23, 0.16) !important;
+}
+
+.hero::after {
+  content: none !important;
+}
+
+.hero h1 {
+  margin: 6px 0 16px !important;
+  font-size: clamp(34px, 3.2vw, 52px) !important;
+  line-height: 1 !important;
+}
+
+.hero-info-card {
+  max-width: 620px !important;
+  grid-template-columns: repeat(2, minmax(180px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.hero-info-block {
+  min-height: 74px !important;
+  padding: 14px 16px !important;
+  border-radius: 10px !important;
+}
+
+.hero-info-block strong {
+  margin-top: 5px !important;
+  font-size: 17px !important;
+}
+
+.hero .brand-panel {
+  min-height: 74px !important;
+  min-width: 230px !important;
+  border-radius: 10px !important;
+}
+
+.hero .brand-main {
+  font-size: 20px !important;
+}
+
+.hero-action-row .settings-button,
+.hero-action-row .logout-button,
+.hero-action-row .tool-link {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+}
+
+.dashboard-session-wrap,
+.clients-shell {
+  display: block !important;
+  min-height: 0 !important;
+  margin-top: 18px !important;
+}
+
+.session-planner,
+.clients-panel {
+  width: 100% !important;
+  min-height: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+.session-planner-horizontal {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 0.52fr) minmax(0, 1.48fr) !important;
+  gap: 14px !important;
+  padding: 0 !important;
+}
+
+.session-planner-copy,
+.session-planner-form-area,
+.clients-panel > .panel-header,
+.clients-layout {
+  border: 1px solid #d9e8de !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  color: #071f17 !important;
+  box-shadow: 0 14px 34px rgba(7, 31, 23, 0.06) !important;
+}
+
+.session-planner-copy,
+.clients-panel > .panel-header {
+  padding: 20px 22px !important;
+  border-left: 5px solid #087244 !important;
+}
+
+.session-planner-form-area {
+  padding: 20px !important;
+}
+
+.clients-layout {
+  margin-top: 14px !important;
+  padding: 18px !important;
+}
+
+.session-planner-copy h2,
+.clients-panel > .panel-header h2 {
+  color: #071f17 !important;
+  font-size: clamp(28px, 2.2vw, 38px) !important;
+  line-height: 1.05 !important;
+}
+
+.session-planner-copy .label,
+.clients-panel > .panel-header .label,
+.label {
+  color: #087244 !important;
+}
+
+.session-planner-copy .laadschema-note,
+.clients-panel > .panel-header .laadschema-note {
+  max-width: 70ch !important;
+  color: #60756b !important;
+  font-size: 15px !important;
+}
+
+.work-session-form {
+  grid-template-columns: minmax(180px, 0.8fr) minmax(230px, 1fr) auto !important;
+}
+
+.work-session-form input,
+.work-session-form select,
+.work-session-form textarea,
+.session-planner-form-area input {
+  min-height: 48px !important;
+  border-radius: 10px !important;
+}
+
+.client-cards {
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.client-card-button {
+  min-height: 96px !important;
+  padding: 18px 52px 18px 18px !important;
+  border: 1px solid #d9e8de !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 26px rgba(7, 31, 23, 0.045) !important;
+}
+
+.client-card-button::before {
+  left: 0 !important;
+  right: auto !important;
+  top: 18px !important;
+  bottom: 18px !important;
+  width: 4px !important;
+  height: auto !important;
+  border-radius: 0 999px 999px 0 !important;
+  background: #b4dcca !important;
+  opacity: 1 !important;
+}
+
+.client-card-button::after {
+  right: 16px !important;
+  bottom: 50% !important;
+  transform: translateY(50%) !important;
+  width: 30px !important;
+  height: 30px !important;
+  background: #e8f5ee !important;
+  color: #087244 !important;
+}
+
+.client-card-button:hover {
+  transform: translateY(-1px) !important;
+  border-color: rgba(8, 114, 68, 0.38) !important;
+  box-shadow: 0 16px 34px rgba(7, 31, 23, 0.075) !important;
+}
+
+.client-card-button.active {
+  background: #073f2d !important;
+  border-color: #073f2d !important;
+  box-shadow: 0 18px 40px rgba(7, 63, 45, 0.2) !important;
+}
+
+.client-card-button.active::before {
+  background: #9ee6be !important;
+}
+
+.client-card-button.active::after {
+  background: rgba(255, 255, 255, 0.15) !important;
+  color: #ffffff !important;
+}
+
+.client-card-title {
+  margin-top: 0 !important;
+  font-size: 20px !important;
+  line-height: 1.1 !important;
+}
+
+.client-card-subtext {
+  margin-top: 9px !important;
+  font-size: 12px !important;
+}
+
+.clients-bottom-cards {
+  margin-top: 14px !important;
+  grid-template-columns: repeat(4, minmax(190px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.clients-bottom-cards > section {
+  min-height: 132px !important;
+  padding: 18px !important;
+  border-radius: 12px !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 26px rgba(7, 31, 23, 0.045) !important;
+}
+
+.clients-bottom-cards > section::after {
+  height: 3px !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.clients-bottom-cards h3 {
+  margin: 12px 0 18px !important;
+  font-size: 22px !important;
+}
+
+#createWorkSessionButton,
+#openLeverschemaFromClientsButton,
+#exportLeverschemaFromClientsButton,
+#openLaadschemaButton,
+#openStockButton,
+.clients-bottom-cards .button-link {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+  box-shadow: none !important;
+}
+
+@media (max-width: 1180px) {
+  .hero,
+  .session-planner-horizontal {
+    grid-template-columns: 1fr !important;
+  }
+
+  .clients-bottom-cards {
+    grid-template-columns: repeat(2, minmax(190px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 18px, 1680px) !important;
+  }
+
+  .hero,
+  .session-planner-copy,
+  .session-planner-form-area,
+  .clients-panel > .panel-header,
+  .clients-layout {
+    padding: 16px !important;
+  }
+
+  .hero-info-card,
+  .work-session-form,
+  .client-cards,
+  .clients-bottom-cards {
+    grid-template-columns: 1fr !important;
+  }
+}

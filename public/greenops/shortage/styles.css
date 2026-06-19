@@ -2401,3 +2401,96 @@ table th {
     font-size: 42px !important;
   }
 }
+
+/* Premium Control Center correction for Manco's. */
+body {
+  background:
+    linear-gradient(180deg, #eef5f0 0, #f7faf8 280px, #f6f9f7 100%) !important;
+  color: #071f17 !important;
+}
+
+.app-shell {
+  width: min(1680px, calc(100% - 36px)) !important;
+  padding: 16px 0 34px !important;
+}
+
+.topbar {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 18px !important;
+  min-height: 132px !important;
+  padding: 22px 24px !important;
+  border: 1px solid rgba(7, 31, 23, 0.1) !important;
+  border-radius: 12px !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    linear-gradient(135deg, #082d22, #0b5b3d) !important;
+  box-shadow: 0 18px 42px rgba(7, 31, 23, 0.16) !important;
+}
+
+.topbar::after {
+  content: none !important;
+}
+
+.topbar h1 {
+  margin: 6px 0 0 !important;
+  font-size: clamp(34px, 3.2vw, 52px) !important;
+  line-height: 1 !important;
+}
+
+.topbar-actions .nav-link,
+.topbar-actions button {
+  min-height: 44px !important;
+  border-radius: 10px !important;
+}
+
+.panel,
+.session-create-panel,
+.created-sessions-panel,
+.preview-panel,
+.history-panel,
+.analytics-header-panel,
+.analytics-wide-panel,
+.analytics-side-panel,
+.top-articles-panel,
+.client-history-card,
+.delivery-point-card,
+.metrics-grid article {
+  border-radius: 12px !important;
+  box-shadow: 0 14px 34px rgba(7, 31, 23, 0.06) !important;
+}
+
+.panel-heading,
+.analytics-header-panel {
+  padding: 18px 20px !important;
+}
+
+.panel-heading h2,
+.preview-title h2,
+.analytics-header-panel h1 {
+  font-size: clamp(26px, 2vw, 36px) !important;
+}
+
+.delivery-point-card {
+  min-height: 76px !important;
+}
+
+table th {
+  height: 42px !important;
+}
+
+@media (max-width: 1180px) {
+  .topbar {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 18px, 1680px) !important;
+  }
+
+  .topbar {
+    padding: 16px !important;
+  }
+}
