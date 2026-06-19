@@ -149,6 +149,17 @@ const HAVI_BELGIUM_FULL_PALLET = {
 };
 
 const appLogo = document.getElementById("appLogo");
+const sidebarLogo = document.getElementById("sidebarLogo");
+const sidebarNavButtons = Array.from(document.querySelectorAll("[data-nav-page]"));
+const controlSettingsButton = document.getElementById("controlSettingsButton");
+const controlLogoutButton = document.getElementById("controlLogoutButton");
+const controlSessionName = document.getElementById("controlSessionName");
+const controlSessionDate = document.getElementById("controlSessionDate");
+const controlUserName = document.getElementById("controlUserName");
+const controlUserInitial = document.getElementById("controlUserInitial");
+const sidebarUserName = document.getElementById("sidebarUserName");
+const sidebarUserEmail = document.getElementById("sidebarUserEmail");
+const sidebarUserInitial = document.getElementById("sidebarUserInitial");
 const authScreen = document.getElementById("authScreen");
 const appShell = document.getElementById("appShell");
 const appHero = document.querySelector(".hero");
@@ -206,6 +217,11 @@ const clientsPage = document.getElementById("clientsPage");
 const settingsPage = document.getElementById("settingsPage");
 const stockPage = document.getElementById("stockPage");
 const clientCards = document.getElementById("clientCards");
+const clientsKpiCount = document.getElementById("clientsKpiCount");
+const clientsKpiDeliveryPoints = document.getElementById("clientsKpiDeliveryPoints");
+const clientsKpiMancoRate = document.getElementById("clientsKpiMancoRate");
+const clientsKpiOrders = document.getElementById("clientsKpiOrders");
+const clientsKpiUpdated = document.getElementById("clientsKpiUpdated");
 const openLeverschemaFromClientsButton = document.getElementById("openLeverschemaFromClientsButton");
 const exportLeverschemaFromClientsButton = document.getElementById("exportLeverschemaFromClientsButton");
 const openLaadschemaButton = document.getElementById("openLaadschemaButton");
@@ -268,8 +284,27 @@ const sheetTabButtons = Array.from(document.querySelectorAll("[data-sheet-tab]")
 
 loginForm.addEventListener("submit", handleLogin);
 appLogo.addEventListener("click", () => switchPage("dashboard"));
+sidebarLogo?.addEventListener("click", () => switchPage("dashboard"));
 settingsButton.addEventListener("click", openSettingsPage);
+controlSettingsButton?.addEventListener("click", openSettingsPage);
 logoutButton.addEventListener("click", handleLogout);
+controlLogoutButton?.addEventListener("click", handleLogout);
+sidebarNavButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const page = button.dataset.navPage;
+    if (!page) return;
+    if (page === "settings") {
+      openSettingsPage();
+      return;
+    }
+    if (page === "laadschema") {
+      switchPage("laadschema");
+      initializeLaadschema();
+      return;
+    }
+    switchPage(page);
+  });
+});
 workSessionForm.addEventListener("submit", handleWorkSessionCreate);
 workSessionDate.addEventListener("change", syncWorkSessionNameFromDate);
 emailInput.addEventListener("change", handleUpload);
@@ -1306,6 +1341,7 @@ function renderClientTabs() {
     if (client.includes("Saturday") && activeSheet !== "Friday") return false;
     return true;
   });
+  renderClientKpis(clientsToShow);
 
   clientCards.innerHTML = clientsToShow.map((client) => {
     const parts = client.split("\n");
@@ -1319,6 +1355,44 @@ function renderClientTabs() {
       </button>
     `;
   }).join("");
+}
+
+function renderClientKpis(clientsToShow = DASHBOARD_CLIENTS) {
+  const workspaces = state.clientWorkspaces || {};
+  const deliveryPoints = new Set();
+  let orders = 0;
+
+  Object.values(workspaces).forEach((workspace) => {
+    const preview = workspace?.preview || workspace;
+    const customers = Array.isArray(preview?.customers) ? preview.customers : [];
+    if (customers.length) {
+      orders += customers.length;
+      customers.forEach((customer) => {
+        const deliveryPoint = getCustomerDeliveryPoint(customer) || customer.dc || customer.fatrans || customer.customer;
+        if (deliveryPoint) deliveryPoints.add(normalizeText(deliveryPoint));
+      });
+      return;
+    }
+
+    const savedOrders = Array.isArray(workspace?.orders) ? workspace.orders : [];
+    orders += savedOrders.length;
+    savedOrders.forEach((order) => {
+      const deliveryPoint = order.deliveryPoint || order.dc || order.customer;
+      if (deliveryPoint) deliveryPoints.add(normalizeText(deliveryPoint));
+    });
+  });
+
+  if (clientsKpiCount) clientsKpiCount.textContent = String(clientsToShow.length);
+  if (clientsKpiDeliveryPoints) clientsKpiDeliveryPoints.textContent = String(deliveryPoints.size);
+  if (clientsKpiOrders) clientsKpiOrders.textContent = String(orders);
+  if (clientsKpiMancoRate) clientsKpiMancoRate.textContent = "0%";
+  if (clientsKpiUpdated) {
+    const updated = state.activeWorkSession?.updatedAt || state.activeWorkSession?.createdAt;
+    const date = updated ? new Date(updated) : new Date();
+    clientsKpiUpdated.textContent = Number.isNaN(date.getTime())
+      ? "--:--"
+      : date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  }
 }
 
 function handleClientCardClick(event) {
@@ -3401,6 +3475,7 @@ function switchPage(page) {
   if (ordersClientTitle) {
     ordersClientTitle.textContent = state.selectedClient || "Orders";
   }
+  updateNavigationState(page);
   appHero?.classList.toggle("hidden", !showHero);
   dashboardPage.classList.toggle("hidden", !showDashboard);
   clientsPage.classList.toggle("hidden", !showClients);
@@ -3425,6 +3500,17 @@ function switchPage(page) {
   if (showStock) {
     renderStockTable();
   }
+}
+
+function updateNavigationState(page = state.currentPage) {
+  sidebarNavButtons.forEach((button) => {
+    const target = button.dataset.navPage;
+    const isActive =
+      target === page ||
+      (page === "orders" && target === "clients") ||
+      (page === "laadschema" && target === "laadschema");
+    button.classList.toggle("active", isActive);
+  });
 }
 
 function updateLeverschemaPageVisibility() {
@@ -3893,6 +3979,14 @@ function getClientActionPreferences(client) {
 
 
 function updateHeaderAccountInfo() {
+  const userName = state.user?.name || "Planner";
+  const userEmail = state.user?.email || "planner@greenops.app";
+  const initial = (userName.trim()[0] || "P").toUpperCase();
+  const sessionName = state.activeWorkSession?.name || "No active session";
+  const sessionDate = state.activeWorkSession?.date
+    ? `Session date: ${formatSessionDate(state.activeWorkSession.date)}`
+    : "Create or open a session.";
+
   if (sessionUserName) {
     sessionUserName.textContent = state.user?.name || "-";
   }
@@ -3900,12 +3994,31 @@ function updateHeaderAccountInfo() {
     sessionUserEmail.textContent = state.user?.email || "-";
   }
   if (headerSessionName) {
-    headerSessionName.textContent = state.activeWorkSession?.name || "No active session";
+    headerSessionName.textContent = sessionName;
   }
   if (headerSessionDate) {
-    headerSessionDate.textContent = state.activeWorkSession?.date
-      ? `Session date: ${formatSessionDate(state.activeWorkSession.date)}`
-      : "Create or open a session.";
+    headerSessionDate.textContent = sessionDate;
+  }
+  if (controlSessionName) {
+    controlSessionName.textContent = sessionName;
+  }
+  if (controlSessionDate) {
+    controlSessionDate.textContent = sessionDate;
+  }
+  if (controlUserName) {
+    controlUserName.textContent = userName;
+  }
+  if (controlUserInitial) {
+    controlUserInitial.textContent = initial;
+  }
+  if (sidebarUserName) {
+    sidebarUserName.textContent = userName;
+  }
+  if (sidebarUserEmail) {
+    sidebarUserEmail.textContent = userEmail;
+  }
+  if (sidebarUserInitial) {
+    sidebarUserInitial.textContent = initial;
   }
   if (state.activeWorkSession?.id) {
     window.localStorage.setItem(ACTIVE_WORK_SESSION_STORAGE_KEY, state.activeWorkSession.id);

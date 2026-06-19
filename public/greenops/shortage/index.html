@@ -4,10 +4,46 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OrderFlow Manco Control</title>
-    <link rel="stylesheet" href="styles.css?v=pc5">
+    <link rel="stylesheet" href="styles.css?v=pc6">
   </head>
   <body>
     <main class="app-shell">
+      <aside class="control-sidebar" aria-label="OrderFlow navigation">
+        <a class="sidebar-brand" href="/?page=clients">
+          <span class="sidebar-logo-mark">O</span>
+          <span>OrderFlow</span>
+        </a>
+        <nav class="sidebar-nav">
+          <a class="sidebar-nav-item" href="/"><span class="sidebar-nav-icon">▣</span><span>Sessions</span></a>
+          <a class="sidebar-nav-item" href="/?page=clients"><span class="sidebar-nav-icon">♧</span><span>Clients</span></a>
+          <a class="sidebar-nav-item active" href="/shortages/"><span class="sidebar-nav-icon">◇</span><span>Manco's</span></a>
+          <a class="sidebar-nav-item" href="/?page=stock"><span class="sidebar-nav-icon">▤</span><span>Stock</span></a>
+          <a class="sidebar-nav-item" href="/?page=leverschema"><span class="sidebar-nav-icon">▥</span><span>Leverschema</span></a>
+          <a class="sidebar-nav-item" href="/?page=settings"><span class="sidebar-nav-icon">⚙</span><span>Settings</span></a>
+        </nav>
+        <div class="sidebar-user-card">
+          <span class="sidebar-user-avatar">P</span>
+          <div>
+            <strong>Planner</strong>
+            <span>planner@greenops.app</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="control-shell">
+        <header class="control-topbar">
+          <div class="control-session">
+            <span>Session:</span>
+            <strong id="controlSessionName">OrderFlow shared session</strong>
+          </div>
+          <a class="control-icon-button" href="/?page=clients">Back to OrderFlow</a>
+          <div class="control-user-button">
+            <span>P</span>
+            <strong>Planner</strong>
+          </div>
+        </header>
+
+        <div class="control-workspace">
       <section class="topbar">
         <div>
           <p class="eyebrow">ORDERFLOW SHORTAGE CONTROL</p>
@@ -244,7 +280,9 @@
           </div>
         </section>
       </section>
+        </div>
+      </section>
     </main>
-    <script src="app.js?v=pc5"></script>
+    <script src="app.js?v=pc6"></script>
   </body>
 </html>

@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OrderFlow</title>
-    <link rel="stylesheet" href="/styles.css?v=pc5">
-    <script src="/theme-manager.js?v=pc5"></script>
+    <link rel="stylesheet" href="/styles.css?v=pc6">
+    <script src="/theme-manager.js?v=pc6"></script>
   </head>
   <body>
     <section id="authScreen" class="auth-shell">
@@ -30,7 +30,69 @@
     </section>
 
     <main id="appShell" class="app-shell hidden">
-      <section class="hero">
+      <aside class="control-sidebar" aria-label="OrderFlow navigation">
+        <button id="sidebarLogo" class="sidebar-brand" type="button" title="Dashboard">
+          <span class="sidebar-logo-mark">O</span>
+          <span>OrderFlow</span>
+        </button>
+        <nav class="sidebar-nav">
+          <button class="sidebar-nav-item" type="button" data-nav-page="dashboard">
+            <span class="sidebar-nav-icon">▣</span>
+            <span>Sessions</span>
+          </button>
+          <button class="sidebar-nav-item" type="button" data-nav-page="clients">
+            <span class="sidebar-nav-icon">♧</span>
+            <span>Clients</span>
+          </button>
+          <a class="sidebar-nav-item" href="/shortages/">
+            <span class="sidebar-nav-icon">◇</span>
+            <span>Manco's</span>
+          </a>
+          <button class="sidebar-nav-item" type="button" data-nav-page="stock">
+            <span class="sidebar-nav-icon">▤</span>
+            <span>Stock</span>
+          </button>
+          <button class="sidebar-nav-item" type="button" data-nav-page="leverschema">
+            <span class="sidebar-nav-icon">▥</span>
+            <span>Leverschema</span>
+          </button>
+          <button class="sidebar-nav-item" type="button" data-nav-page="laadschema">
+            <span class="sidebar-nav-icon">▧</span>
+            <span>Loading</span>
+          </button>
+          <button class="sidebar-nav-item" type="button" data-nav-page="settings">
+            <span class="sidebar-nav-icon">⚙</span>
+            <span>Settings</span>
+          </button>
+        </nav>
+        <div class="sidebar-user-card">
+          <span class="sidebar-user-avatar" id="sidebarUserInitial">P</span>
+          <div>
+            <strong id="sidebarUserName">Planner</strong>
+            <span id="sidebarUserEmail">planner@greenops.app</span>
+          </div>
+        </div>
+      </aside>
+
+      <section class="control-shell">
+        <header class="control-topbar">
+          <div class="control-session">
+            <span>Session:</span>
+            <strong id="controlSessionName">No active session</strong>
+          </div>
+          <div class="control-date" id="controlSessionDate">Create or open a session.</div>
+          <div class="control-topbar-actions">
+            <a class="control-icon-button" href="/shortages/" title="Open Manco control">Manco's</a>
+            <button id="controlSettingsButton" class="control-icon-button" type="button">Settings</button>
+            <button id="controlLogoutButton" class="control-user-button" type="button">
+              <span id="controlUserInitial">P</span>
+              <strong id="controlUserName">Planner</strong>
+            </button>
+          </div>
+        </header>
+
+        <div class="control-workspace">
+      <section class="hero legacy-hero">
         <div class="hero-main">
           <p class="eyebrow">ORDERFLOW CONTROL CENTER</p>
           <h1 id="appLogo" style="cursor: pointer;" title="Return to session dashboard">OrderFlow</h1>
@@ -110,6 +172,33 @@
               </div>
             </div>
             <div class="clients-layout">
+              <div class="clients-kpi-grid" aria-label="Session overview">
+                <article>
+                  <span>Clients</span>
+                  <strong id="clientsKpiCount">0</strong>
+                  <small>In session</small>
+                </article>
+                <article>
+                  <span>Delivery Points</span>
+                  <strong id="clientsKpiDeliveryPoints">0</strong>
+                  <small>Across clients</small>
+                </article>
+                <article>
+                  <span>Manco Rate</span>
+                  <strong id="clientsKpiMancoRate">0%</strong>
+                  <small>Overall</small>
+                </article>
+                <article>
+                  <span>Orders in Email</span>
+                  <strong id="clientsKpiOrders">0</strong>
+                  <small>Needs review</small>
+                </article>
+                <article>
+                  <span>Last Updated</span>
+                  <strong id="clientsKpiUpdated">--:--</strong>
+                  <small>Today</small>
+                </article>
+              </div>
               <div id="clientCards" class="client-cards" aria-label="Client cards"></div>
               <div class="clients-bottom-cards">
                 <section class="clients-leverschema-card">
@@ -429,6 +518,8 @@
           </div>
         </section>
       </section>
+        </div>
+      </section>
     </main>
 
     <!-- Pakbon Upload Modal -->
@@ -525,6 +616,6 @@
       </div>
     </div>
 
-    <script src="/app.js?v=pc5"></script>
+    <script src="/app.js?v=pc6"></script>
   </body>
   </html>

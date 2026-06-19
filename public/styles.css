@@ -5162,3 +5162,513 @@ body {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Planned premium control center layout. */
+body {
+  min-height: 100vh !important;
+  background: #f7f9f8 !important;
+  color: #102019 !important;
+}
+
+.app-shell {
+  display: grid !important;
+  grid-template-columns: 184px minmax(0, 1fr) !important;
+  width: 100% !important;
+  min-height: 100vh !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: #f7f9f8 !important;
+}
+
+.control-sidebar {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 22px 14px 18px;
+  background:
+    radial-gradient(circle at 0 0, rgba(24, 163, 98, 0.3), transparent 32%),
+    linear-gradient(180deg, #06492f 0%, #053620 100%);
+  color: #ffffff;
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-brand {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  width: 100% !important;
+  min-height: 42px !important;
+  padding: 0 6px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #ffffff !important;
+  text-decoration: none !important;
+  font-size: 18px !important;
+  font-weight: 850 !important;
+  box-shadow: none !important;
+}
+
+.sidebar-logo-mark {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 50%;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.sidebar-nav {
+  display: grid;
+  gap: 6px;
+  margin-top: 28px;
+}
+
+.sidebar-nav-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 12px !important;
+  min-height: 42px !important;
+  padding: 0 12px !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 760 !important;
+  box-shadow: none !important;
+}
+
+.sidebar-nav-item:hover,
+.sidebar-nav-item.active {
+  background: rgba(255, 255, 255, 0.13) !important;
+  color: #ffffff !important;
+}
+
+.sidebar-nav-icon {
+  width: 18px;
+  text-align: center;
+  color: #d8f5e5;
+  font-size: 15px;
+}
+
+.sidebar-user-card {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  margin-top: auto;
+  padding: 10px 8px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar-user-avatar,
+.control-user-button span {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border-radius: 50%;
+  background: #ffffff;
+  color: #075c3b;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.sidebar-user-card strong,
+.sidebar-user-card span {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sidebar-user-card strong {
+  color: #ffffff;
+  font-size: 13px;
+}
+
+.sidebar-user-card span:not(.sidebar-user-avatar) {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 11px;
+}
+
+.control-shell {
+  min-width: 0;
+  background: #f7f9f8;
+}
+
+.control-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-height: 64px;
+  padding: 0 28px;
+  border-bottom: 1px solid #dfe7e2;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(14px);
+}
+
+.control-session {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-session span,
+.control-date {
+  color: #64736b;
+  font-size: 13px;
+}
+
+.control-session strong {
+  max-width: 280px;
+  overflow: hidden;
+  color: #102019;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.control-date {
+  padding-left: 10px;
+  border-left: 1px solid #dfe7e2;
+}
+
+.control-topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.control-icon-button,
+.control-user-button {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  min-height: 38px !important;
+  padding: 0 12px !important;
+  border: 1px solid #dfe7e2 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #102019 !important;
+  text-decoration: none !important;
+  font-size: 13px !important;
+  font-weight: 760 !important;
+  box-shadow: none !important;
+}
+
+.control-user-button {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.control-user-button span {
+  background: #075c3b;
+  color: #ffffff;
+}
+
+.control-workspace {
+  padding: 26px 28px 34px;
+}
+
+.legacy-hero {
+  display: none !important;
+}
+
+#dashboardPage,
+#clientsPage,
+#ordersPage,
+#settingsPage,
+#stockPage,
+#leverschemaPage,
+#laadschemaPage {
+  max-width: 1480px;
+}
+
+.dashboard-session-wrap,
+.clients-shell {
+  margin: 0 !important;
+}
+
+.session-planner,
+.clients-panel {
+  background: transparent !important;
+}
+
+.session-planner-horizontal {
+  display: grid !important;
+  grid-template-columns: minmax(260px, 0.32fr) minmax(0, 0.68fr) !important;
+  gap: 18px !important;
+}
+
+.session-planner-copy,
+.session-planner-form-area,
+.clients-panel > .panel-header,
+.clients-layout,
+.orders-context-card,
+.actions,
+.stats .card,
+.table-panel,
+.delivery-point-card,
+.stock-workspace,
+.laadschema-workspace,
+.settings-panel {
+  border: 1px solid #dfe7e2 !important;
+  border-radius: 10px !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 28px rgba(16, 32, 25, 0.045) !important;
+}
+
+.session-planner-copy,
+.clients-panel > .panel-header {
+  padding: 24px !important;
+  border-left: 0 !important;
+}
+
+.session-planner-copy h2,
+.clients-panel > .panel-header h2,
+.orders-context-card h2,
+.table-panel h2 {
+  color: #102019 !important;
+  font-size: 28px !important;
+  line-height: 1.1 !important;
+}
+
+.session-planner-form-area,
+.clients-layout {
+  padding: 18px !important;
+}
+
+.work-session-form {
+  grid-template-columns: 1fr !important;
+  gap: 16px !important;
+  max-width: 260px;
+}
+
+.session-history-list {
+  margin-top: 18px !important;
+}
+
+.history-item-card {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  align-items: center !important;
+  gap: 12px !important;
+  padding: 12px 14px !important;
+  border: 1px solid #edf2ef !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.history-item-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.history-item-actions button {
+  min-height: 32px !important;
+  border-radius: 6px !important;
+}
+
+.clients-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.clients-kpi-grid article {
+  min-height: 86px;
+  padding: 14px 16px;
+  border: 1px solid #dfe7e2;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.clients-kpi-grid span,
+.clients-kpi-grid small {
+  display: block;
+  color: #64736b;
+  font-size: 12px;
+}
+
+.clients-kpi-grid strong {
+  display: block;
+  margin: 6px 0 3px;
+  color: #102019;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.client-cards {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.client-card-button {
+  min-height: 142px !important;
+  padding: 18px !important;
+  border-radius: 10px !important;
+}
+
+.client-card-button::before {
+  inset: auto 16px 18px 16px !important;
+  width: auto !important;
+  height: 4px !important;
+  border-radius: 999px !important;
+  background: #e8efeb !important;
+}
+
+.client-card-button::after {
+  content: none !important;
+}
+
+.client-card-title {
+  font-size: 18px !important;
+}
+
+.client-card-button.active {
+  background: #ffffff !important;
+  color: #102019 !important;
+  border-color: #dfe7e2 !important;
+  box-shadow: 0 10px 28px rgba(16, 32, 25, 0.045) !important;
+}
+
+.client-card-button.active::before {
+  background: #087244 !important;
+}
+
+.clients-bottom-cards {
+  grid-template-columns: repeat(4, minmax(190px, 1fr)) !important;
+  margin-top: 18px !important;
+}
+
+.clients-bottom-cards > section {
+  min-height: 128px !important;
+}
+
+.orders-context-card {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 18px 20px !important;
+}
+
+.orders-context-card h2 {
+  font-size: 26px !important;
+}
+
+.actions {
+  padding: 12px !important;
+}
+
+.stats {
+  grid-template-columns: repeat(3, minmax(180px, 1fr)) !important;
+}
+
+.layout {
+  grid-template-columns: minmax(300px, 0.33fr) minmax(0, 0.67fr) !important;
+  gap: 14px !important;
+}
+
+.table-wrap,
+.order-table-wrap,
+.stock-table-wrap,
+.leverschema-table-wrap,
+.laadschema-table-container {
+  border-radius: 8px !important;
+}
+
+table th,
+.items-preview table th {
+  height: 38px !important;
+  background: #f3f7f5 !important;
+  color: #075c3b !important;
+}
+
+.leverschema-table thead th,
+.laadschema-table thead th,
+.stock-table-wrap thead th {
+  background: #075c3b !important;
+  color: #ffffff !important;
+}
+
+button,
+.button-link,
+.upload-button {
+  min-height: 38px !important;
+  border-radius: 7px !important;
+}
+
+#createWorkSessionButton,
+#openLeverschemaFromClientsButton,
+#exportLeverschemaFromClientsButton,
+#openLaadschemaButton,
+#openStockButton,
+.clients-bottom-cards .button-link,
+.actions button:not(:disabled),
+.orders-context-actions button:not(:disabled) {
+  background: #075c3b !important;
+  border-color: #075c3b !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 1100px) {
+  .app-shell {
+    grid-template-columns: 1fr !important;
+  }
+
+  .control-sidebar {
+    position: static;
+    min-height: auto;
+  }
+
+  .sidebar-nav {
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  }
+
+  .sidebar-user-card {
+    display: none;
+  }
+
+  .control-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 12px 16px;
+  }
+
+  .session-planner-horizontal,
+  .layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .clients-kpi-grid,
+  .clients-bottom-cards {
+    grid-template-columns: repeat(2, minmax(180px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .control-workspace {
+    padding: 16px;
+  }
+
+  .clients-kpi-grid,
+  .clients-bottom-cards,
+  .stats {
+    grid-template-columns: 1fr !important;
+  }
+}
