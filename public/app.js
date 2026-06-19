@@ -1382,36 +1382,177 @@ function renderClientTabs() {
 
 function getClientDashboardMetrics(client) {
   const canonical = canonicalClientName(client);
-  const workspace = state.clientWorkspaces?.[canonical] || {};
-  const preview = workspace.preview || workspace;
-  const customers = Array.isArray(preview.customers) ? preview.customers : [];
+  const metricOrders = getClientMetricOrders(canonical);
+  return summarizeClientMetricOrders(metricOrders);
+}
+
+function getClientMetricOrders(client) {
+  const canonical = canonicalClientName(client);
+  const orders = [];
+  const seen = new Set();
+  const workspaces = state.clientWorkspaces || {};
+
+  Object.entries(workspaces).forEach(([workspaceClient, workspace]) => {
+    if (canonicalClientName(workspaceClient) !== canonical) return;
+    withMetricClientContext(canonical, workspace?.mode, () => {
+      collectMetricOrdersFromWorkspace(workspace, orders, seen);
+    });
+  });
+
+  if (canonicalClientName(state.selectedClient) === canonical) {
+    withMetricClientContext(canonical, state.mode, () => {
+      collectMetricOrdersFromPreview(state.mode, state.preview, orders, seen);
+    });
+  }
+
+  return orders;
+}
+
+function withMetricClientContext(client, mode, callback) {
+  const previousClient = state.selectedClient;
+  const previousMode = state.mode;
+  try {
+    state.selectedClient = canonicalClientName(client);
+    if (mode) state.mode = mode;
+    return callback();
+  } finally {
+    state.selectedClient = previousClient;
+    state.mode = previousMode;
+  }
+}
+
+function collectMetricOrdersFromWorkspace(workspace, orders, seen) {
+  if (!workspace) return;
+  collectMetricOrdersFromPreview(workspace.mode, workspace.preview, orders, seen);
+  collectMetricOrdersFromPreview(workspace.mode, workspace, orders, seen);
+}
+
+function collectMetricOrdersFromPreview(mode, preview, orders, seen) {
+  if (!preview) return;
+
+  const standardOrders = Array.isArray(preview.orders) ? preview.orders : [];
+  standardOrders.forEach((order, index) => {
+    addMetricOrder(mode || "standard", order, index, orders, seen);
+  });
+
+  const customerOrders = Array.isArray(preview.customers) ? preview.customers : [];
+  customerOrders.forEach((order, index) => {
+    addMetricOrder(mode || "standard", order, index, orders, seen);
+  });
+
+  const specialOrders = Array.isArray(preview.specialOrders) ? preview.specialOrders : [];
+  specialOrders.forEach((order, index) => {
+    addMetricOrder("special", order, index, orders, seen);
+  });
+
+  if (!standardOrders.length && !customerOrders.length && !specialOrders.length && Array.isArray(preview.items)) {
+    addMetricOrder(mode || "special", preview, 0, orders, seen);
+  }
+}
+
+function addMetricOrder(mode, rawOrder, index, orders, seen) {
+  if (!rawOrder) return;
+  const order = mode === "special" ? specialMetricOrder(rawOrder, index) : standardMetricOrder(rawOrder);
+  const identity = buildMetricOrderIdentity(order, index);
+  if (seen.has(identity)) return;
+  seen.add(identity);
+  orders.push(order);
+}
+
+function standardMetricOrder(rawOrder) {
+  const order = state.mode === "standard" ? applyStandardClientDisplayRules(rawOrder) : rawOrder;
+  return {
+    customer: order?.customer || "",
+    reference: order?.reference || order?.label || "",
+    fatrans: order?.fatrans || "",
+    deliveryPoint: getMetricDeliveryPoint(order),
+    items: Array.isArray(order?.items) ? order.items : [],
+  };
+}
+
+function specialMetricOrder(rawOrder, index) {
+  const deliveryPoint = rawOrder?.deliveryPoint || getSpecialDeliveryPoint(rawOrder, rawOrder?.sourceFileName || "");
+  return {
+    customer: rawOrder?.customer || "Havi Logistics GmbH",
+    reference: getSpecialOrderReference(rawOrder, index),
+    fatrans: rawOrder?.fatrans || deliveryPoint,
+    deliveryPoint,
+    items: Array.isArray(rawOrder?.items) ? rawOrder.items : [],
+  };
+}
+
+function buildMetricOrderIdentity(order, index) {
+  const reference = normalizeText(order.reference || "");
+  const deliveryPoint = normalizeText(order.deliveryPoint || "");
+  const customer = normalizeText(order.customer || "");
+  const fatrans = normalizeText(order.fatrans || "");
+  const itemSignature = (order.items || [])
+    .map((item) => `${normalizeText(item.primary || item.article || "")}:${parseMetricNumber(item.quantity ?? item.ordered ?? 0)}`)
+    .join("|");
+  return reference || itemSignature
+    ? `${reference}|${deliveryPoint}|${customer}|${fatrans}|${itemSignature}`
+    : `${deliveryPoint}|${customer}|${fatrans}|${index}`;
+}
+
+function summarizeClientMetricOrders(metricOrders) {
   const deliveryPoints = new Set();
   let ordered = 0;
   let manco = 0;
 
-  customers.forEach((customer) => {
-    const deliveryPoint = getCustomerDeliveryPoint(customer) || customer.dc || customer.fatrans || customer.customer;
+  metricOrders.forEach((order) => {
+    const deliveryPoint = getMetricDeliveryPoint(order);
     if (deliveryPoint) deliveryPoints.add(normalizeText(deliveryPoint));
-    const items = Array.isArray(customer.items) ? customer.items : [];
-    items.forEach((item) => {
-      const orderedQty = Number(item.quantity ?? item.ordered ?? item.orderedQuantity ?? 0) || 0;
-      const mancoQty = Number(item.manco ?? item.shortage ?? item.shortageQuantity ?? 0) || 0;
+    (order.items || []).forEach((item) => {
+      const orderedQty = parseMetricNumber(
+        item.quantity ?? item.ordered ?? item.orderedQuantity ?? item.orderedBoxes ?? item.ordered_boxes ?? 0,
+      );
+      const deliveredRaw = item.delivered ?? item.deliveredQuantity ?? item.delivered_quantity;
+      const hasDeliveredValue = deliveredRaw !== undefined && deliveredRaw !== null && deliveredRaw !== "";
+      const deliveredQty = hasDeliveredValue ? parseMetricNumber(deliveredRaw) : 0;
+      const explicitManco = item.manco ?? item.shortage ?? item.shortageQuantity ?? item.shortage_quantity;
+      const mancoQty = explicitManco !== undefined && explicitManco !== null
+        ? parseMetricNumber(explicitManco)
+        : hasDeliveredValue
+          ? Math.max(0, orderedQty - deliveredQty)
+          : 0;
       ordered += orderedQty;
       manco += Math.max(0, mancoQty);
     });
   });
 
-  const savedOrders = Array.isArray(workspace.orders) ? workspace.orders : [];
-  savedOrders.forEach((order) => {
-    const deliveryPoint = order.deliveryPoint || order.dc || order.customer;
-    if (deliveryPoint) deliveryPoints.add(normalizeText(deliveryPoint));
-  });
-
-  const fallbackDeliveryPoints = deliveryPoints.size || (customers.length ? 1 : 0) || (savedOrders.length ? 1 : 0);
+  const fallbackDeliveryPoints = deliveryPoints.size || (metricOrders.length ? 1 : 0);
   return {
     deliveryPoints: fallbackDeliveryPoints,
+    orders: metricOrders.length,
+    ordered,
+    manco,
     mancoRate: ordered > 0 ? (manco / ordered) * 100 : 0,
   };
+}
+
+function getMetricDeliveryPoint(order) {
+  if (!order) return "";
+  try {
+    const deliveryPoint = getDeliveryPointKey(order);
+    if (deliveryPoint) return deliveryPoint;
+  } catch {
+    // Fall back to raw fields when this is not a full order object.
+  }
+  try {
+    const customerPoint = getCustomerDeliveryPoint(order);
+    if (customerPoint) return customerPoint;
+  } catch {
+    // Fall back to raw fields when customer parsing is unavailable.
+  }
+  return order.deliveryPoint || order.delivery_point || order.dc || order.fatrans || order.customer || order.label || "";
+}
+
+function parseMetricNumber(value) {
+  if (value === null || value === undefined || value === "") return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const normalized = String(value).replace(/\s/g, "").replace(",", ".");
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : 0;
 }
 
 function formatPercent(value) {
@@ -1421,34 +1562,27 @@ function formatPercent(value) {
 }
 
 function renderClientKpis(clientsToShow = DASHBOARD_CLIENTS) {
-  const workspaces = state.clientWorkspaces || {};
   const deliveryPoints = new Set();
   let orders = 0;
+  let ordered = 0;
+  let manco = 0;
 
-  Object.values(workspaces).forEach((workspace) => {
-    const preview = workspace?.preview || workspace;
-    const customers = Array.isArray(preview?.customers) ? preview.customers : [];
-    if (customers.length) {
-      orders += customers.length;
-      customers.forEach((customer) => {
-        const deliveryPoint = getCustomerDeliveryPoint(customer) || customer.dc || customer.fatrans || customer.customer;
-        if (deliveryPoint) deliveryPoints.add(normalizeText(deliveryPoint));
-      });
-      return;
-    }
-
-    const savedOrders = Array.isArray(workspace?.orders) ? workspace.orders : [];
-    orders += savedOrders.length;
-    savedOrders.forEach((order) => {
-      const deliveryPoint = order.deliveryPoint || order.dc || order.customer;
-      if (deliveryPoint) deliveryPoints.add(normalizeText(deliveryPoint));
+  clientsToShow.forEach((client) => {
+    const metricOrders = getClientMetricOrders(client);
+    const summary = summarizeClientMetricOrders(metricOrders);
+    orders += summary.orders;
+    ordered += summary.ordered;
+    manco += summary.manco;
+    metricOrders.forEach((order) => {
+      const deliveryPoint = getMetricDeliveryPoint(order);
+      if (deliveryPoint) deliveryPoints.add(`${canonicalClientName(client)}:${normalizeText(deliveryPoint)}`);
     });
   });
 
   if (clientsKpiCount) clientsKpiCount.textContent = String(clientsToShow.length);
   if (clientsKpiDeliveryPoints) clientsKpiDeliveryPoints.textContent = String(deliveryPoints.size);
   if (clientsKpiOrders) clientsKpiOrders.textContent = String(orders);
-  if (clientsKpiMancoRate) clientsKpiMancoRate.textContent = "0%";
+  if (clientsKpiMancoRate) clientsKpiMancoRate.textContent = formatPercent(ordered > 0 ? (manco / ordered) * 100 : 0);
   if (clientsKpiUpdated) {
     const updated = state.activeWorkSession?.updatedAt || state.activeWorkSession?.createdAt;
     const date = updated ? new Date(updated) : new Date();
@@ -3526,6 +3660,11 @@ async function exportStockWorkbook() {
 }
 
 function switchPage(page) {
+  const previousPage = state.currentPage;
+  const currentWorkspace = state.clientWorkspaces?.[canonicalClientName(state.selectedClient)];
+  if (previousPage === "orders" && page !== "orders" && (state.preview || currentWorkspace?.preview)) {
+    syncCurrentClientWorkspace();
+  }
   state.currentPage = page;
   const showDashboard = page === "dashboard";
   const showClients = page === "clients";

@@ -149,6 +149,17 @@ const HAVI_BELGIUM_FULL_PALLET = {
 };
 
 const appLogo = document.getElementById("appLogo");
+const sidebarLogo = document.getElementById("sidebarLogo");
+const sidebarNavButtons = Array.from(document.querySelectorAll("[data-nav-page]"));
+const controlSettingsButton = document.getElementById("controlSettingsButton");
+const controlLogoutButton = document.getElementById("controlLogoutButton");
+const controlSessionName = document.getElementById("controlSessionName");
+const controlSessionDate = document.getElementById("controlSessionDate");
+const controlUserName = document.getElementById("controlUserName");
+const controlUserInitial = document.getElementById("controlUserInitial");
+const sidebarUserName = document.getElementById("sidebarUserName");
+const sidebarUserEmail = document.getElementById("sidebarUserEmail");
+const sidebarUserInitial = document.getElementById("sidebarUserInitial");
 const authScreen = document.getElementById("authScreen");
 const appShell = document.getElementById("appShell");
 const appHero = document.querySelector(".hero");
@@ -206,6 +217,13 @@ const clientsPage = document.getElementById("clientsPage");
 const settingsPage = document.getElementById("settingsPage");
 const stockPage = document.getElementById("stockPage");
 const clientCards = document.getElementById("clientCards");
+const clientsListTitle = document.getElementById("clientsListTitle");
+const clientSearchInput = document.getElementById("clientSearchInput");
+const clientsKpiCount = document.getElementById("clientsKpiCount");
+const clientsKpiDeliveryPoints = document.getElementById("clientsKpiDeliveryPoints");
+const clientsKpiMancoRate = document.getElementById("clientsKpiMancoRate");
+const clientsKpiOrders = document.getElementById("clientsKpiOrders");
+const clientsKpiUpdated = document.getElementById("clientsKpiUpdated");
 const openLeverschemaFromClientsButton = document.getElementById("openLeverschemaFromClientsButton");
 const exportLeverschemaFromClientsButton = document.getElementById("exportLeverschemaFromClientsButton");
 const openLaadschemaButton = document.getElementById("openLaadschemaButton");
@@ -268,8 +286,27 @@ const sheetTabButtons = Array.from(document.querySelectorAll("[data-sheet-tab]")
 
 loginForm.addEventListener("submit", handleLogin);
 appLogo.addEventListener("click", () => switchPage("dashboard"));
+sidebarLogo?.addEventListener("click", () => switchPage("dashboard"));
 settingsButton.addEventListener("click", openSettingsPage);
+controlSettingsButton?.addEventListener("click", openSettingsPage);
 logoutButton.addEventListener("click", handleLogout);
+controlLogoutButton?.addEventListener("click", handleLogout);
+sidebarNavButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const page = button.dataset.navPage;
+    if (!page) return;
+    if (page === "settings") {
+      openSettingsPage();
+      return;
+    }
+    if (page === "laadschema") {
+      switchPage("laadschema");
+      initializeLaadschema();
+      return;
+    }
+    switchPage(page);
+  });
+});
 workSessionForm.addEventListener("submit", handleWorkSessionCreate);
 workSessionDate.addEventListener("change", syncWorkSessionNameFromDate);
 emailInput.addEventListener("change", handleUpload);
@@ -331,6 +368,7 @@ exportSheetSelect?.addEventListener("change", () => {
   syncCurrentClientWorkspace();
 });
 clientCards.addEventListener("click", handleClientCardClick);
+clientSearchInput?.addEventListener("input", renderClientTabs);
 openLeverschemaFromClientsButton.addEventListener("click", () => switchPage("leverschema"));
 exportLeverschemaFromClientsButton.addEventListener("click", exportLeverschemaWorkbook);
 openStockButton?.addEventListener("click", () => switchPage("stock"));
@@ -1302,23 +1340,256 @@ function openSettingsPage() {
 
 function renderClientTabs() {
   const activeSheet = getActiveSessionSheet();
+  const query = normalizeText(clientSearchInput?.value || "");
   const clientsToShow = DASHBOARD_CLIENTS.filter((client) => {
     if (client.includes("Saturday") && activeSheet !== "Friday") return false;
+    if (query && !normalizeText(client).includes(query)) return false;
     return true;
   });
+  renderClientKpis(clientsToShow);
+  if (clientsListTitle) {
+    clientsListTitle.textContent = `Clients (${clientsToShow.length})`;
+  }
 
   clientCards.innerHTML = clientsToShow.map((client) => {
     const parts = client.split("\n");
     const title = parts[0];
     const subtext = parts.slice(1).join("\n");
+    const metrics = getClientDashboardMetrics(client);
     
     return `
       <button class="client-card-button ${client === state.selectedClient ? "active" : ""}" type="button" data-client-card="${escapeHtml(client)}">
         <span class="client-card-title">${escapeHtml(title)}</span>
         ${subtext ? `<span class="client-card-subtext">${escapeHtml(subtext)}</span>` : ""}
+        <span class="client-card-metrics">
+          <span>
+            <small>Delivery Points</small>
+            <strong>${metrics.deliveryPoints}</strong>
+          </span>
+          <span>
+            <small>Manco Rate</small>
+            <strong>${formatPercent(metrics.mancoRate)}</strong>
+          </span>
+        </span>
+        <span class="client-card-progress" aria-hidden="true">
+          <span style="width: ${Math.min(100, Math.max(0, metrics.mancoRate))}%"></span>
+        </span>
+        <span class="client-card-rate">${formatPercent(metrics.mancoRate)}</span>
       </button>
     `;
   }).join("");
+}
+
+function getClientDashboardMetrics(client) {
+  const canonical = canonicalClientName(client);
+  const metricOrders = getClientMetricOrders(canonical);
+  return summarizeClientMetricOrders(metricOrders);
+}
+
+function getClientMetricOrders(client) {
+  const canonical = canonicalClientName(client);
+  const orders = [];
+  const seen = new Set();
+  const workspaces = state.clientWorkspaces || {};
+
+  Object.entries(workspaces).forEach(([workspaceClient, workspace]) => {
+    if (canonicalClientName(workspaceClient) !== canonical) return;
+    withMetricClientContext(canonical, workspace?.mode, () => {
+      collectMetricOrdersFromWorkspace(workspace, orders, seen);
+    });
+  });
+
+  if (canonicalClientName(state.selectedClient) === canonical) {
+    withMetricClientContext(canonical, state.mode, () => {
+      collectMetricOrdersFromPreview(state.mode, state.preview, orders, seen);
+    });
+  }
+
+  return orders;
+}
+
+function withMetricClientContext(client, mode, callback) {
+  const previousClient = state.selectedClient;
+  const previousMode = state.mode;
+  try {
+    state.selectedClient = canonicalClientName(client);
+    if (mode) state.mode = mode;
+    return callback();
+  } finally {
+    state.selectedClient = previousClient;
+    state.mode = previousMode;
+  }
+}
+
+function collectMetricOrdersFromWorkspace(workspace, orders, seen) {
+  if (!workspace) return;
+  collectMetricOrdersFromPreview(workspace.mode, workspace.preview, orders, seen);
+  collectMetricOrdersFromPreview(workspace.mode, workspace, orders, seen);
+}
+
+function collectMetricOrdersFromPreview(mode, preview, orders, seen) {
+  if (!preview) return;
+
+  const standardOrders = Array.isArray(preview.orders) ? preview.orders : [];
+  standardOrders.forEach((order, index) => {
+    addMetricOrder(mode || "standard", order, index, orders, seen);
+  });
+
+  const customerOrders = Array.isArray(preview.customers) ? preview.customers : [];
+  customerOrders.forEach((order, index) => {
+    addMetricOrder(mode || "standard", order, index, orders, seen);
+  });
+
+  const specialOrders = Array.isArray(preview.specialOrders) ? preview.specialOrders : [];
+  specialOrders.forEach((order, index) => {
+    addMetricOrder("special", order, index, orders, seen);
+  });
+
+  if (!standardOrders.length && !customerOrders.length && !specialOrders.length && Array.isArray(preview.items)) {
+    addMetricOrder(mode || "special", preview, 0, orders, seen);
+  }
+}
+
+function addMetricOrder(mode, rawOrder, index, orders, seen) {
+  if (!rawOrder) return;
+  const order = mode === "special" ? specialMetricOrder(rawOrder, index) : standardMetricOrder(rawOrder);
+  const identity = buildMetricOrderIdentity(order, index);
+  if (seen.has(identity)) return;
+  seen.add(identity);
+  orders.push(order);
+}
+
+function standardMetricOrder(rawOrder) {
+  const order = state.mode === "standard" ? applyStandardClientDisplayRules(rawOrder) : rawOrder;
+  return {
+    customer: order?.customer || "",
+    reference: order?.reference || order?.label || "",
+    fatrans: order?.fatrans || "",
+    deliveryPoint: getMetricDeliveryPoint(order),
+    items: Array.isArray(order?.items) ? order.items : [],
+  };
+}
+
+function specialMetricOrder(rawOrder, index) {
+  const deliveryPoint = rawOrder?.deliveryPoint || getSpecialDeliveryPoint(rawOrder, rawOrder?.sourceFileName || "");
+  return {
+    customer: rawOrder?.customer || "Havi Logistics GmbH",
+    reference: getSpecialOrderReference(rawOrder, index),
+    fatrans: rawOrder?.fatrans || deliveryPoint,
+    deliveryPoint,
+    items: Array.isArray(rawOrder?.items) ? rawOrder.items : [],
+  };
+}
+
+function buildMetricOrderIdentity(order, index) {
+  const reference = normalizeText(order.reference || "");
+  const deliveryPoint = normalizeText(order.deliveryPoint || "");
+  const customer = normalizeText(order.customer || "");
+  const fatrans = normalizeText(order.fatrans || "");
+  const itemSignature = (order.items || [])
+    .map((item) => `${normalizeText(item.primary || item.article || "")}:${parseMetricNumber(item.quantity ?? item.ordered ?? 0)}`)
+    .join("|");
+  return reference || itemSignature
+    ? `${reference}|${deliveryPoint}|${customer}|${fatrans}|${itemSignature}`
+    : `${deliveryPoint}|${customer}|${fatrans}|${index}`;
+}
+
+function summarizeClientMetricOrders(metricOrders) {
+  const deliveryPoints = new Set();
+  let ordered = 0;
+  let manco = 0;
+
+  metricOrders.forEach((order) => {
+    const deliveryPoint = getMetricDeliveryPoint(order);
+    if (deliveryPoint) deliveryPoints.add(normalizeText(deliveryPoint));
+    (order.items || []).forEach((item) => {
+      const orderedQty = parseMetricNumber(
+        item.quantity ?? item.ordered ?? item.orderedQuantity ?? item.orderedBoxes ?? item.ordered_boxes ?? 0,
+      );
+      const deliveredRaw = item.delivered ?? item.deliveredQuantity ?? item.delivered_quantity;
+      const hasDeliveredValue = deliveredRaw !== undefined && deliveredRaw !== null && deliveredRaw !== "";
+      const deliveredQty = hasDeliveredValue ? parseMetricNumber(deliveredRaw) : 0;
+      const explicitManco = item.manco ?? item.shortage ?? item.shortageQuantity ?? item.shortage_quantity;
+      const mancoQty = explicitManco !== undefined && explicitManco !== null
+        ? parseMetricNumber(explicitManco)
+        : hasDeliveredValue
+          ? Math.max(0, orderedQty - deliveredQty)
+          : 0;
+      ordered += orderedQty;
+      manco += Math.max(0, mancoQty);
+    });
+  });
+
+  const fallbackDeliveryPoints = deliveryPoints.size || (metricOrders.length ? 1 : 0);
+  return {
+    deliveryPoints: fallbackDeliveryPoints,
+    orders: metricOrders.length,
+    ordered,
+    manco,
+    mancoRate: ordered > 0 ? (manco / ordered) * 100 : 0,
+  };
+}
+
+function getMetricDeliveryPoint(order) {
+  if (!order) return "";
+  try {
+    const deliveryPoint = getDeliveryPointKey(order);
+    if (deliveryPoint) return deliveryPoint;
+  } catch {
+    // Fall back to raw fields when this is not a full order object.
+  }
+  try {
+    const customerPoint = getCustomerDeliveryPoint(order);
+    if (customerPoint) return customerPoint;
+  } catch {
+    // Fall back to raw fields when customer parsing is unavailable.
+  }
+  return order.deliveryPoint || order.delivery_point || order.dc || order.fatrans || order.customer || order.label || "";
+}
+
+function parseMetricNumber(value) {
+  if (value === null || value === undefined || value === "") return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  const normalized = String(value).replace(/\s/g, "").replace(",", ".");
+  const numeric = Number(normalized);
+  return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function formatPercent(value) {
+  const numeric = Number(value) || 0;
+  if (numeric === 0) return "0%";
+  return `${numeric.toFixed(numeric < 1 ? 2 : 1).replace(/\.0$/, "")}%`;
+}
+
+function renderClientKpis(clientsToShow = DASHBOARD_CLIENTS) {
+  const deliveryPoints = new Set();
+  let orders = 0;
+  let ordered = 0;
+  let manco = 0;
+
+  clientsToShow.forEach((client) => {
+    const metricOrders = getClientMetricOrders(client);
+    const summary = summarizeClientMetricOrders(metricOrders);
+    orders += summary.orders;
+    ordered += summary.ordered;
+    manco += summary.manco;
+    metricOrders.forEach((order) => {
+      const deliveryPoint = getMetricDeliveryPoint(order);
+      if (deliveryPoint) deliveryPoints.add(`${canonicalClientName(client)}:${normalizeText(deliveryPoint)}`);
+    });
+  });
+
+  if (clientsKpiCount) clientsKpiCount.textContent = String(clientsToShow.length);
+  if (clientsKpiDeliveryPoints) clientsKpiDeliveryPoints.textContent = String(deliveryPoints.size);
+  if (clientsKpiOrders) clientsKpiOrders.textContent = String(orders);
+  if (clientsKpiMancoRate) clientsKpiMancoRate.textContent = formatPercent(ordered > 0 ? (manco / ordered) * 100 : 0);
+  if (clientsKpiUpdated) {
+    const updated = state.activeWorkSession?.updatedAt || state.activeWorkSession?.createdAt;
+    const date = updated ? new Date(updated) : new Date();
+    clientsKpiUpdated.textContent = Number.isNaN(date.getTime())
+      ? "--:--"
+      : date.toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+  }
 }
 
 function handleClientCardClick(event) {
@@ -3389,6 +3660,11 @@ async function exportStockWorkbook() {
 }
 
 function switchPage(page) {
+  const previousPage = state.currentPage;
+  const currentWorkspace = state.clientWorkspaces?.[canonicalClientName(state.selectedClient)];
+  if (previousPage === "orders" && page !== "orders" && (state.preview || currentWorkspace?.preview)) {
+    syncCurrentClientWorkspace();
+  }
   state.currentPage = page;
   const showDashboard = page === "dashboard";
   const showClients = page === "clients";
@@ -3401,6 +3677,7 @@ function switchPage(page) {
   if (ordersClientTitle) {
     ordersClientTitle.textContent = state.selectedClient || "Orders";
   }
+  updateNavigationState(page);
   appHero?.classList.toggle("hidden", !showHero);
   dashboardPage.classList.toggle("hidden", !showDashboard);
   clientsPage.classList.toggle("hidden", !showClients);
@@ -3425,6 +3702,17 @@ function switchPage(page) {
   if (showStock) {
     renderStockTable();
   }
+}
+
+function updateNavigationState(page = state.currentPage) {
+  sidebarNavButtons.forEach((button) => {
+    const target = button.dataset.navPage;
+    const isActive =
+      target === page ||
+      (page === "orders" && target === "clients") ||
+      (page === "laadschema" && target === "laadschema");
+    button.classList.toggle("active", isActive);
+  });
 }
 
 function updateLeverschemaPageVisibility() {
@@ -3893,6 +4181,14 @@ function getClientActionPreferences(client) {
 
 
 function updateHeaderAccountInfo() {
+  const userName = state.user?.name || "Planner";
+  const userEmail = state.user?.email || "planner@greenops.app";
+  const initial = (userName.trim()[0] || "P").toUpperCase();
+  const sessionName = state.activeWorkSession?.name || "No active session";
+  const sessionDate = state.activeWorkSession?.date
+    ? `Session date: ${formatSessionDate(state.activeWorkSession.date)}`
+    : "Create or open a session.";
+
   if (sessionUserName) {
     sessionUserName.textContent = state.user?.name || "-";
   }
@@ -3900,12 +4196,31 @@ function updateHeaderAccountInfo() {
     sessionUserEmail.textContent = state.user?.email || "-";
   }
   if (headerSessionName) {
-    headerSessionName.textContent = state.activeWorkSession?.name || "No active session";
+    headerSessionName.textContent = sessionName;
   }
   if (headerSessionDate) {
-    headerSessionDate.textContent = state.activeWorkSession?.date
-      ? `Session date: ${formatSessionDate(state.activeWorkSession.date)}`
-      : "Create or open a session.";
+    headerSessionDate.textContent = sessionDate;
+  }
+  if (controlSessionName) {
+    controlSessionName.textContent = sessionName;
+  }
+  if (controlSessionDate) {
+    controlSessionDate.textContent = sessionDate;
+  }
+  if (controlUserName) {
+    controlUserName.textContent = userName;
+  }
+  if (controlUserInitial) {
+    controlUserInitial.textContent = initial;
+  }
+  if (sidebarUserName) {
+    sidebarUserName.textContent = userName;
+  }
+  if (sidebarUserEmail) {
+    sidebarUserEmail.textContent = userEmail;
+  }
+  if (sidebarUserInitial) {
+    sidebarUserInitial.textContent = initial;
   }
   if (state.activeWorkSession?.id) {
     window.localStorage.setItem(ACTIVE_WORK_SESSION_STORAGE_KEY, state.activeWorkSession.id);
