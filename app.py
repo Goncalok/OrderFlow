@@ -964,6 +964,10 @@ class CombinedHandler(BaseHTTPRequestHandler):
             data = resolved.read_bytes()
             self.send_response(HTTPStatus.OK)
             self.send_header("Content-Type", content_type)
+            if resolved.suffix.lower() in {".html", ".css", ".js"}:
+                self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+                self.send_header("Pragma", "no-cache")
+                self.send_header("Expires", "0")
             self.send_header("Content-Length", str(len(data)))
             self.end_headers()
             self.wfile.write(data)

@@ -4110,3 +4110,331 @@ tbody tr:hover td {
   color: var(--of-muted);
   text-align: center;
 }
+
+/* Premium Control Center final cascade layer.
+   This block intentionally lives at the end of the file so older theme rules
+   cannot override the selected direction. */
+body {
+  font-family: "Inter", "Segoe UI", Arial, sans-serif !important;
+  background: linear-gradient(180deg, #f8fbf8 0, #eef5f0 420px, #f7faf8 100%) !important;
+  color: #09251b !important;
+}
+
+.app-shell {
+  width: min(1540px, calc(100% - 28px)) !important;
+  margin: 0 auto !important;
+  padding: 14px 0 32px !important;
+}
+
+.hero {
+  min-height: 176px !important;
+  align-items: stretch !important;
+  border: 1px solid rgba(6, 61, 41, 0.12) !important;
+  border-top: 4px solid #087244 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #09251b !important;
+  box-shadow: 0 18px 48px rgba(20, 63, 43, 0.08) !important;
+}
+
+.hero h1,
+.auth-card h1,
+.session-planner-copy h2,
+.panel-header h2,
+.orders-context-card h2,
+.table-panel h2,
+.side-panel h2 {
+  color: #09251b !important;
+  letter-spacing: 0 !important;
+}
+
+.hero .eyebrow,
+.label,
+.session-label {
+  color: #087244 !important;
+  letter-spacing: 0.02em !important;
+  font-weight: 900 !important;
+}
+
+.session-email,
+.auth-copy,
+.laadschema-note,
+.state-meta {
+  color: #5d7068 !important;
+}
+
+.hero-info-block,
+.brand-panel,
+.card,
+.orders-context-card,
+.table-panel,
+.side-panel,
+.leverschema-summary-card,
+.leverschema-include-card,
+.settings-panel,
+.clients-panel,
+.session-planner,
+.stock-workspace,
+.laadschema-controls,
+.laadschema-workspace,
+.laadschema-table-container,
+.clients-leverschema-card,
+.clients-laadschema-card,
+.clients-shortages-card,
+.clients-stock-card,
+.history-item-card,
+.stat-card {
+  border: 1px solid #dce8df !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  color: #09251b !important;
+  box-shadow: 0 10px 28px rgba(20, 63, 43, 0.06) !important;
+}
+
+.hero-info-block,
+.brand-panel,
+.stock-summary {
+  background: #f8fbf8 !important;
+  box-shadow: none !important;
+}
+
+.brand-main {
+  color: #09251b !important;
+}
+
+.brand-sub {
+  color: #5d7068 !important;
+}
+
+button,
+.button-link,
+.tool-link,
+.upload-button,
+input,
+select,
+textarea {
+  border-radius: 8px !important;
+}
+
+button,
+.button-link,
+.tool-link,
+.upload-button {
+  min-height: 42px;
+  border: 1px solid #dce8df !important;
+  background: #ffffff !important;
+  color: #09251b !important;
+  font-weight: 800 !important;
+  box-shadow: none !important;
+}
+
+#createWorkSessionButton,
+#openLeverschemaFromClientsButton,
+#openLaadschemaButton,
+#openStockButton,
+.auth-form button,
+.button-link,
+.upload-button,
+#exportStockButton:not(:disabled),
+#exportLeverschemaFromClientsButton,
+#exportLeverschemaButton,
+#exportLaadschemaButton,
+#addTruckButton,
+.actions button:not(:disabled),
+.orders-context-actions button:not(:disabled) {
+  background: #087244 !important;
+  border-color: #087244 !important;
+  color: #ffffff !important;
+}
+
+input,
+select,
+textarea {
+  border: 1px solid #dce8df !important;
+  background: #ffffff !important;
+  color: #09251b !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 3px solid rgba(8, 114, 68, 0.14) !important;
+  border-color: #087244 !important;
+}
+
+.session-planner-horizontal {
+  display: grid !important;
+  grid-template-columns: minmax(280px, 0.6fr) minmax(0, 1.4fr) !important;
+  gap: 34px !important;
+  align-items: start !important;
+  padding: 24px !important;
+}
+
+.work-session-form {
+  display: grid !important;
+  grid-template-columns: minmax(160px, 0.7fr) minmax(220px, 1fr) auto !important;
+  gap: 12px !important;
+  align-items: end !important;
+}
+
+.client-cards {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(178px, 1fr)) !important;
+  gap: 10px !important;
+}
+
+.client-card-button {
+  min-height: 92px !important;
+  justify-content: flex-start !important;
+  align-items: flex-start !important;
+  border: 1px solid #dce8df !important;
+  background: #ffffff !important;
+  color: #09251b !important;
+  box-shadow: none !important;
+}
+
+.client-card-button:hover,
+.client-card-button.active {
+  border-color: #087244 !important;
+  background: #e7f5ec !important;
+  color: #09251b !important;
+}
+
+.clients-bottom-cards {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(190px, 1fr)) !important;
+  gap: 12px !important;
+}
+
+.layout {
+  display: grid !important;
+  grid-template-columns: minmax(300px, 0.55fr) minmax(0, 1.45fr) !important;
+  gap: 14px !important;
+  align-items: start !important;
+}
+
+.side-panel {
+  position: sticky !important;
+  top: 14px !important;
+}
+
+.actions,
+.orders-context-card {
+  border: 1px solid #dce8df !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 10px 28px rgba(20, 63, 43, 0.06) !important;
+}
+
+.delivery-point-button {
+  min-height: 46px !important;
+  border: 1px solid #dce8df !important;
+  background: #ffffff !important;
+  color: #09251b !important;
+}
+
+.delivery-point-button:hover,
+.delivery-point-button.active {
+  background: #087244 !important;
+  border-color: #087244 !important;
+  color: #ffffff !important;
+}
+
+.delivery-reference-option {
+  grid-template-columns: 22px minmax(0, 1fr) auto !important;
+  border: 1px solid #dce8df !important;
+  background: #ffffff !important;
+  border-radius: 8px !important;
+}
+
+.delivery-reference-option.active {
+  border-color: #087244 !important;
+  background: #e7f5ec !important;
+}
+
+.table-wrap,
+.order-table-wrap,
+.stock-table-wrap,
+.leverschema-table-wrapper,
+.laadschema-table-wrap {
+  border: 1px solid #dce8df !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+}
+
+table th,
+.items-preview table th {
+  background: #f4f9f5 !important;
+  color: #063d29 !important;
+  border-bottom: 1px solid #b9d4c2 !important;
+  font-size: 12px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.01em !important;
+}
+
+.leverschema-table thead th,
+.laadschema-table thead th,
+.stock-table-wrap thead th {
+  background: #087244 !important;
+  color: #ffffff !important;
+}
+
+table td {
+  border-bottom: 1px solid #dce8df !important;
+}
+
+tbody tr:hover td {
+  background: #fbfdfb !important;
+}
+
+.auth-backdrop {
+  background: linear-gradient(180deg, rgba(248, 251, 248, 0.9), rgba(238, 245, 240, 0.94)), linear-gradient(135deg, #ffffff, #e6f2ea) !important;
+}
+
+.auth-card,
+.confirmation-modal-card,
+.custom-date-picker {
+  border: 1px solid #dce8df !important;
+  border-top: 4px solid #087244 !important;
+  border-radius: 8px !important;
+  background: #ffffff !important;
+  box-shadow: 0 28px 72px rgba(9, 37, 27, 0.18) !important;
+}
+
+@media (max-width: 1100px) {
+  .hero,
+  .orders-context-card {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .layout,
+  .session-planner-horizontal,
+  .settings-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .clients-bottom-cards {
+    grid-template-columns: repeat(2, minmax(180px, 1fr)) !important;
+  }
+
+  .work-session-form {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 16px, 1540px) !important;
+  }
+
+  .hero-info-card,
+  .stats,
+  .clients-bottom-cards {
+    grid-template-columns: 1fr !important;
+  }
+
+  .client-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
