@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>OrderFlow</title>
-    <link rel="stylesheet" href="/styles.css?v=pc6">
-    <script src="/theme-manager.js?v=pc6"></script>
+    <link rel="stylesheet" href="/styles.css?v=pc7">
+    <script src="/theme-manager.js?v=pc7"></script>
   </head>
   <body>
     <section id="authScreen" class="auth-shell">
@@ -198,6 +198,21 @@
                   <strong id="clientsKpiUpdated">--:--</strong>
                   <small>Today</small>
                 </article>
+              </div>
+              <div class="clients-list-toolbar">
+                <h3 id="clientsListTitle">Clients (0)</h3>
+                <div class="clients-list-tools">
+                  <label class="clients-search">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.5"></circle><path d="m15 15 5 5"></path></svg>
+                    <input id="clientSearchInput" type="search" placeholder="Search clients...">
+                  </label>
+                  <button class="client-view-button active" type="button" aria-label="Grid view">
+                    <svg viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"></rect><rect x="14" y="4" width="6" height="6" rx="1.5"></rect><rect x="4" y="14" width="6" height="6" rx="1.5"></rect><rect x="14" y="14" width="6" height="6" rx="1.5"></rect></svg>
+                  </button>
+                  <button class="client-view-button" type="button" aria-label="List view">
+                    <svg viewBox="0 0 24 24"><path d="M8 6h12"></path><path d="M8 12h12"></path><path d="M8 18h12"></path><path d="M4 6h.01"></path><path d="M4 12h.01"></path><path d="M4 18h.01"></path></svg>
+                  </button>
+                </div>
               </div>
               <div id="clientCards" class="client-cards" aria-label="Client cards"></div>
               <div class="clients-bottom-cards">
@@ -616,6 +631,6 @@
       </div>
     </div>
 
-    <script src="/app.js?v=pc6"></script>
+    <script src="/app.js?v=pc7"></script>
   </body>
   </html>

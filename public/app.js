@@ -217,6 +217,8 @@ const clientsPage = document.getElementById("clientsPage");
 const settingsPage = document.getElementById("settingsPage");
 const stockPage = document.getElementById("stockPage");
 const clientCards = document.getElementById("clientCards");
+const clientsListTitle = document.getElementById("clientsListTitle");
+const clientSearchInput = document.getElementById("clientSearchInput");
 const clientsKpiCount = document.getElementById("clientsKpiCount");
 const clientsKpiDeliveryPoints = document.getElementById("clientsKpiDeliveryPoints");
 const clientsKpiMancoRate = document.getElementById("clientsKpiMancoRate");
@@ -366,6 +368,7 @@ exportSheetSelect?.addEventListener("change", () => {
   syncCurrentClientWorkspace();
 });
 clientCards.addEventListener("click", handleClientCardClick);
+clientSearchInput?.addEventListener("input", renderClientTabs);
 openLeverschemaFromClientsButton.addEventListener("click", () => switchPage("leverschema"));
 exportLeverschemaFromClientsButton.addEventListener("click", exportLeverschemaWorkbook);
 openStockButton?.addEventListener("click", () => switchPage("stock"));
@@ -1337,24 +1340,84 @@ function openSettingsPage() {
 
 function renderClientTabs() {
   const activeSheet = getActiveSessionSheet();
+  const query = normalizeText(clientSearchInput?.value || "");
   const clientsToShow = DASHBOARD_CLIENTS.filter((client) => {
     if (client.includes("Saturday") && activeSheet !== "Friday") return false;
+    if (query && !normalizeText(client).includes(query)) return false;
     return true;
   });
   renderClientKpis(clientsToShow);
+  if (clientsListTitle) {
+    clientsListTitle.textContent = `Clients (${clientsToShow.length})`;
+  }
 
   clientCards.innerHTML = clientsToShow.map((client) => {
     const parts = client.split("\n");
     const title = parts[0];
     const subtext = parts.slice(1).join("\n");
+    const metrics = getClientDashboardMetrics(client);
     
     return `
       <button class="client-card-button ${client === state.selectedClient ? "active" : ""}" type="button" data-client-card="${escapeHtml(client)}">
         <span class="client-card-title">${escapeHtml(title)}</span>
         ${subtext ? `<span class="client-card-subtext">${escapeHtml(subtext)}</span>` : ""}
+        <span class="client-card-metrics">
+          <span>
+            <small>Delivery Points</small>
+            <strong>${metrics.deliveryPoints}</strong>
+          </span>
+          <span>
+            <small>Manco Rate</small>
+            <strong>${formatPercent(metrics.mancoRate)}</strong>
+          </span>
+        </span>
+        <span class="client-card-progress" aria-hidden="true">
+          <span style="width: ${Math.min(100, Math.max(0, metrics.mancoRate))}%"></span>
+        </span>
+        <span class="client-card-rate">${formatPercent(metrics.mancoRate)}</span>
       </button>
     `;
   }).join("");
+}
+
+function getClientDashboardMetrics(client) {
+  const canonical = canonicalClientName(client);
+  const workspace = state.clientWorkspaces?.[canonical] || {};
+  const preview = workspace.preview || workspace;
+  const customers = Array.isArray(preview.customers) ? preview.customers : [];
+  const deliveryPoints = new Set();
+  let ordered = 0;
+  let manco = 0;
+
+  customers.forEach((customer) => {
+    const deliveryPoint = getCustomerDeliveryPoint(customer) || customer.dc || customer.fatrans || customer.customer;
+    if (deliveryPoint) deliveryPoints.add(normalizeText(deliveryPoint));
+    const items = Array.isArray(customer.items) ? customer.items : [];
+    items.forEach((item) => {
+      const orderedQty = Number(item.quantity ?? item.ordered ?? item.orderedQuantity ?? 0) || 0;
+      const mancoQty = Number(item.manco ?? item.shortage ?? item.shortageQuantity ?? 0) || 0;
+      ordered += orderedQty;
+      manco += Math.max(0, mancoQty);
+    });
+  });
+
+  const savedOrders = Array.isArray(workspace.orders) ? workspace.orders : [];
+  savedOrders.forEach((order) => {
+    const deliveryPoint = order.deliveryPoint || order.dc || order.customer;
+    if (deliveryPoint) deliveryPoints.add(normalizeText(deliveryPoint));
+  });
+
+  const fallbackDeliveryPoints = deliveryPoints.size || (customers.length ? 1 : 0) || (savedOrders.length ? 1 : 0);
+  return {
+    deliveryPoints: fallbackDeliveryPoints,
+    mancoRate: ordered > 0 ? (manco / ordered) * 100 : 0,
+  };
+}
+
+function formatPercent(value) {
+  const numeric = Number(value) || 0;
+  if (numeric === 0) return "0%";
+  return `${numeric.toFixed(numeric < 1 ? 2 : 1).replace(/\.0$/, "")}%`;
 }
 
 function renderClientKpis(clientsToShow = DASHBOARD_CLIENTS) {
