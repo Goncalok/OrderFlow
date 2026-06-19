@@ -2215,3 +2215,189 @@ tbody tr:hover td {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Executive Control Center visual pass for Manco's. */
+:root {
+  --exec-ink: #071f17;
+  --exec-green-900: #062e21;
+  --exec-green-800: #08442f;
+  --exec-green-700: #087244;
+  --exec-green-100: #e8f5ee;
+  --exec-line: #d9e8de;
+  --exec-muted: #60756b;
+  --exec-surface: #ffffff;
+  --exec-bg: #f4f8f5;
+}
+
+body {
+  background:
+    linear-gradient(180deg, rgba(6, 46, 33, 0.08), rgba(244, 248, 245, 0) 300px),
+    var(--exec-bg) !important;
+  color: var(--exec-ink) !important;
+}
+
+.app-shell {
+  width: min(1800px, calc(100% - 40px)) !important;
+  padding: 20px 0 38px !important;
+}
+
+.topbar {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto !important;
+  gap: 24px !important;
+  min-height: 188px !important;
+  padding: 30px 34px !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(135deg, #05291d 0%, #074b33 56%, #0a7046 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 24px 70px rgba(7, 31, 23, 0.22) !important;
+}
+
+.topbar::after {
+  content: "MANCO";
+  position: absolute;
+  right: 22px;
+  bottom: -18px;
+  color: rgba(255, 255, 255, 0.055);
+  font-size: clamp(76px, 9vw, 150px);
+  font-weight: 900;
+  line-height: 0.8;
+  pointer-events: none;
+}
+
+.topbar > * {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.topbar h1 {
+  margin-top: 10px !important;
+  color: #ffffff !important;
+  font-size: clamp(46px, 4.8vw, 74px) !important;
+  line-height: 0.92 !important;
+  font-weight: 900 !important;
+}
+
+.topbar .eyebrow {
+  color: #9ee6be !important;
+  letter-spacing: 0.12em !important;
+}
+
+.topbar-actions {
+  align-self: end !important;
+}
+
+.topbar-actions .nav-link,
+.topbar-actions button {
+  min-height: 48px !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(12px);
+}
+
+.panel,
+.session-create-panel,
+.created-sessions-panel,
+.preview-panel,
+.history-panel,
+.analytics-header-panel,
+.analytics-wide-panel,
+.analytics-side-panel,
+.top-articles-panel,
+.client-history-card,
+.delivery-point-card,
+.metrics-grid article {
+  border: 1px solid var(--exec-line) !important;
+  border-radius: 14px !important;
+  background: var(--exec-surface) !important;
+  box-shadow: 0 18px 45px rgba(7, 31, 23, 0.07) !important;
+}
+
+.panel-heading,
+.analytics-header-panel {
+  padding: 22px !important;
+}
+
+.panel-heading h2,
+.preview-title h2,
+.analytics-header-panel h1 {
+  font-size: clamp(28px, 2.4vw, 42px) !important;
+  line-height: 1 !important;
+}
+
+.history-client-card,
+.client-history-card {
+  overflow: hidden !important;
+}
+
+.client-history-card > .client-history-header,
+.history-client-card > .client-history-header {
+  background: var(--exec-green-900) !important;
+  color: #ffffff !important;
+}
+
+.delivery-point-card {
+  min-height: 86px !important;
+}
+
+.delivery-point-card:hover {
+  border-color: rgba(8, 114, 68, 0.42) !important;
+  box-shadow: 0 22px 52px rgba(7, 31, 23, 0.1) !important;
+}
+
+button,
+.nav-link {
+  min-height: 46px !important;
+  border-radius: 12px !important;
+}
+
+#analyticsButton,
+#exportDayAnalyticsButton,
+#quickUpdateButton,
+#saveSessionButton:not(:disabled),
+#exportSelectedMancosButton:not(:disabled),
+#exportMancosButton:not(:disabled),
+.primary-action {
+  background: var(--exec-green-700) !important;
+  border-color: var(--exec-green-700) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 24px rgba(8, 114, 68, 0.2) !important;
+}
+
+.table-wrap,
+.analytics-table-wrap {
+  border-radius: 14px !important;
+}
+
+table th {
+  height: 48px !important;
+  background: var(--exec-green-900) !important;
+  color: #ffffff !important;
+}
+
+@media (max-width: 1180px) {
+  .topbar {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 20px, 1800px) !important;
+    padding-top: 10px !important;
+  }
+
+  .topbar {
+    padding: 20px !important;
+  }
+
+  .topbar h1 {
+    font-size: 42px !important;
+  }
+}

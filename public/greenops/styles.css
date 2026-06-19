@@ -4438,3 +4438,438 @@ tbody tr:hover td {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
+
+/* Executive Control Center visual pass.
+   This is intentionally the last layer: it changes the actual page composition,
+   not just the color palette. */
+:root {
+  --exec-ink: #071f17;
+  --exec-green-900: #062e21;
+  --exec-green-800: #08442f;
+  --exec-green-700: #087244;
+  --exec-green-100: #e8f5ee;
+  --exec-line: #d9e8de;
+  --exec-muted: #60756b;
+  --exec-surface: #ffffff;
+  --exec-bg: #f4f8f5;
+}
+
+body {
+  background:
+    linear-gradient(180deg, rgba(6, 46, 33, 0.08), rgba(244, 248, 245, 0) 300px),
+    var(--exec-bg) !important;
+  color: var(--exec-ink) !important;
+}
+
+.app-shell {
+  width: min(1800px, calc(100% - 40px)) !important;
+  padding: 20px 0 38px !important;
+}
+
+.hero {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.58fr) !important;
+  gap: 24px !important;
+  min-height: 236px !important;
+  padding: 30px 34px !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 14px !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(135deg, #05291d 0%, #074b33 56%, #0a7046 100%) !important;
+  color: #ffffff !important;
+  box-shadow: 0 24px 70px rgba(7, 31, 23, 0.22) !important;
+}
+
+.hero::after {
+  content: "ORDERFLOW";
+  position: absolute;
+  right: 22px;
+  bottom: -22px;
+  color: rgba(255, 255, 255, 0.055);
+  font-size: clamp(76px, 9vw, 156px);
+  font-weight: 900;
+  line-height: 0.8;
+  pointer-events: none;
+}
+
+.hero-main,
+.brand-stack {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.hero .eyebrow {
+  color: #9ee6be !important;
+  font-size: 12px !important;
+  letter-spacing: 0.12em !important;
+}
+
+.hero h1 {
+  margin: 10px 0 24px !important;
+  color: #ffffff !important;
+  font-size: clamp(46px, 4.8vw, 76px) !important;
+  line-height: 0.92 !important;
+  font-weight: 900 !important;
+}
+
+.hero-info-card {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+  gap: 14px !important;
+  max-width: 720px !important;
+}
+
+.hero-info-block,
+.hero .brand-panel {
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 12px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.hero-info-block {
+  min-height: 92px !important;
+  padding: 18px !important;
+}
+
+.hero-info-block strong {
+  margin-top: 8px !important;
+  color: #ffffff !important;
+  font-size: 19px !important;
+}
+
+.hero-info-block .session-email,
+.hero .session-label,
+.hero .brand-sub {
+  color: #cfe9da !important;
+}
+
+.hero .session-label {
+  font-size: 11px !important;
+  letter-spacing: 0.08em !important;
+}
+
+.hero-side {
+  align-self: stretch !important;
+}
+
+.brand-stack {
+  height: 100% !important;
+  justify-content: space-between !important;
+  align-items: stretch !important;
+}
+
+.hero .brand-panel {
+  min-height: 112px !important;
+  display: grid !important;
+  place-items: center !important;
+}
+
+.hero .brand-main {
+  color: #ffffff !important;
+  font-size: 24px !important;
+  letter-spacing: 0.12em !important;
+}
+
+.hero-action-row {
+  justify-content: flex-end !important;
+  gap: 10px !important;
+}
+
+.hero-action-row .settings-button,
+.hero-action-row .logout-button,
+.hero-action-row .tool-link {
+  min-height: 48px !important;
+  border: 1px solid rgba(255, 255, 255, 0.24) !important;
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  backdrop-filter: blur(12px);
+}
+
+.hero-action-row .settings-button span,
+.hero-action-row .logout-button span {
+  color: #ffffff !important;
+}
+
+.dashboard-session-wrap,
+.clients-shell {
+  margin-top: 22px !important;
+}
+
+.session-planner,
+.clients-panel {
+  padding: 0 !important;
+  overflow: hidden !important;
+  border: 1px solid var(--exec-line) !important;
+  border-radius: 14px !important;
+  background: var(--exec-surface) !important;
+  box-shadow: 0 24px 70px rgba(7, 31, 23, 0.08) !important;
+}
+
+.session-planner-horizontal {
+  grid-template-columns: minmax(320px, 0.62fr) minmax(0, 1.38fr) !important;
+  gap: 0 !important;
+}
+
+.session-planner-copy,
+.clients-panel > .panel-header {
+  padding: 30px !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0)),
+    var(--exec-green-900) !important;
+  color: #ffffff !important;
+}
+
+.session-planner-copy h2,
+.clients-panel > .panel-header h2 {
+  color: #ffffff !important;
+  font-size: clamp(30px, 3vw, 46px) !important;
+  line-height: 1 !important;
+}
+
+.session-planner-copy .label,
+.clients-panel > .panel-header .label {
+  color: #9ee6be !important;
+}
+
+.session-planner-copy .laadschema-note,
+.clients-panel > .panel-header .laadschema-note {
+  max-width: 760px !important;
+  color: #cfe9da !important;
+  font-size: 15px !important;
+}
+
+.session-planner-form-area {
+  padding: 30px !important;
+  background: #ffffff !important;
+}
+
+.work-session-form {
+  grid-template-columns: minmax(190px, 0.75fr) minmax(260px, 1fr) minmax(150px, auto) !important;
+  gap: 14px !important;
+}
+
+.work-session-form input,
+.work-session-form select,
+.work-session-form textarea,
+.session-planner-form-area input {
+  min-height: 54px !important;
+  border-radius: 12px !important;
+  background: #fbfdfb !important;
+  font-size: 15px !important;
+}
+
+#createWorkSessionButton,
+#openLeverschemaFromClientsButton,
+#exportLeverschemaFromClientsButton,
+#openLaadschemaButton,
+#openStockButton,
+.clients-bottom-cards .button-link {
+  min-height: 52px !important;
+  border-radius: 12px !important;
+  background: var(--exec-green-700) !important;
+  border-color: var(--exec-green-700) !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 24px rgba(8, 114, 68, 0.2) !important;
+}
+
+.clients-layout {
+  padding: 26px !important;
+}
+
+.client-cards {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.client-card-button {
+  position: relative !important;
+  min-height: 124px !important;
+  padding: 22px 48px 20px 22px !important;
+  border: 1px solid var(--exec-line) !important;
+  border-radius: 14px !important;
+  background:
+    linear-gradient(180deg, #ffffff, #fbfdfb) !important;
+  color: var(--exec-ink) !important;
+  box-shadow: 0 12px 28px rgba(7, 31, 23, 0.05) !important;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease !important;
+}
+
+.client-card-button::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 14px;
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--exec-green-700), #9ee6be);
+  opacity: 0.38;
+}
+
+.client-card-button::after {
+  content: ">";
+  position: absolute;
+  right: 20px;
+  bottom: 18px;
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--exec-green-100);
+  color: var(--exec-green-700);
+  font-weight: 900;
+}
+
+.client-card-button:hover {
+  transform: translateY(-2px) !important;
+  border-color: rgba(8, 114, 68, 0.45) !important;
+  box-shadow: 0 18px 40px rgba(7, 31, 23, 0.1) !important;
+}
+
+.client-card-button.active {
+  border-color: transparent !important;
+  background:
+    linear-gradient(135deg, var(--exec-green-900), var(--exec-green-700)) !important;
+  color: #ffffff !important;
+  box-shadow: 0 20px 48px rgba(8, 68, 47, 0.24) !important;
+}
+
+.client-card-button.active::before {
+  background: rgba(255, 255, 255, 0.72);
+  opacity: 1;
+}
+
+.client-card-button.active::after {
+  background: rgba(255, 255, 255, 0.16);
+  color: #ffffff;
+}
+
+.client-card-title {
+  margin-top: 16px !important;
+  font-size: 22px !important;
+  line-height: 1.05 !important;
+  font-weight: 900 !important;
+}
+
+.client-card-subtext {
+  margin-top: 14px !important;
+  padding-left: 12px !important;
+  border-left: 2px solid rgba(8, 114, 68, 0.28) !important;
+  color: var(--exec-muted) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+}
+
+.client-card-button.active .client-card-subtext {
+  border-left-color: rgba(255, 255, 255, 0.4) !important;
+  color: #cfe9da !important;
+}
+
+.clients-bottom-cards {
+  margin-top: 20px !important;
+  grid-template-columns: repeat(4, minmax(210px, 1fr)) !important;
+  gap: 14px !important;
+}
+
+.clients-bottom-cards > section {
+  position: relative !important;
+  min-height: 178px !important;
+  padding: 22px !important;
+  border: 1px solid var(--exec-line) !important;
+  border-radius: 14px !important;
+  background: #ffffff !important;
+  box-shadow: 0 12px 28px rgba(7, 31, 23, 0.05) !important;
+}
+
+.clients-bottom-cards > section::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(90deg, var(--exec-green-700), #9ee6be);
+}
+
+.clients-bottom-cards h3 {
+  margin: 18px 0 24px !important;
+  font-size: 24px !important;
+  line-height: 1.05 !important;
+}
+
+.clients-leverschema-actions,
+.clients-laadschema-actions {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  margin-top: auto !important;
+}
+
+.session-history-list {
+  margin-top: 18px !important;
+}
+
+.history-item-card {
+  border-radius: 12px !important;
+  background: #fbfdfb !important;
+}
+
+.orders-context-card,
+.actions,
+.stats .card,
+.table-panel,
+.delivery-point-card,
+.stock-workspace,
+.laadschema-workspace,
+.settings-panel {
+  border-radius: 14px !important;
+  box-shadow: 0 18px 45px rgba(7, 31, 23, 0.07) !important;
+}
+
+@media (max-width: 1180px) {
+  .hero {
+    grid-template-columns: 1fr !important;
+  }
+
+  .brand-stack {
+    gap: 16px !important;
+  }
+
+  .session-planner-horizontal {
+    grid-template-columns: 1fr !important;
+  }
+
+  .clients-bottom-cards {
+    grid-template-columns: repeat(2, minmax(220px, 1fr)) !important;
+  }
+}
+
+@media (max-width: 720px) {
+  .app-shell {
+    width: min(100% - 20px, 1800px) !important;
+    padding-top: 10px !important;
+  }
+
+  .hero,
+  .session-planner-copy,
+  .clients-panel > .panel-header,
+  .session-planner-form-area,
+  .clients-layout {
+    padding: 20px !important;
+  }
+
+  .hero-info-card,
+  .work-session-form,
+  .client-cards,
+  .clients-bottom-cards {
+    grid-template-columns: 1fr !important;
+  }
+
+  .hero h1 {
+    font-size: 42px !important;
+  }
+}
