@@ -1352,29 +1352,25 @@ function renderClientTabs() {
   }
 
   clientCards.innerHTML = clientsToShow.map((client) => {
-    const parts = client.split("\n");
-    const title = parts[0];
-    const subtext = parts.slice(1).join("\n");
+    const title = client.split("\n")[0];
     const metrics = getClientDashboardMetrics(client);
-    
+    const mancoRate = Math.min(100, Math.max(0, Number(metrics.mancoRate) || 0));
+
     return `
       <button class="client-card-button ${client === state.selectedClient ? "active" : ""}" type="button" data-client-card="${escapeHtml(client)}">
         <span class="client-card-title">${escapeHtml(title)}</span>
-        ${subtext ? `<span class="client-card-subtext">${escapeHtml(subtext)}</span>` : ""}
-        <span class="client-card-metrics">
-          <span>
+        <span class="client-card-overview">
+          <span class="client-card-delivery">
             <small>Delivery Points</small>
             <strong>${metrics.deliveryPoints}</strong>
           </span>
-          <span>
+          <span class="client-card-manco">
             <small>Manco Rate</small>
-            <strong>${formatPercent(metrics.mancoRate)}</strong>
+            <span class="client-card-gauge" style="--manco-rate: ${Math.max(1, mancoRate)}%;">
+              <strong>${formatPercent(mancoRate)}</strong>
+            </span>
           </span>
         </span>
-        <span class="client-card-progress" aria-hidden="true">
-          <span style="width: ${Math.min(100, Math.max(0, metrics.mancoRate))}%"></span>
-        </span>
-        <span class="client-card-rate">${formatPercent(metrics.mancoRate)}</span>
       </button>
     `;
   }).join("");
