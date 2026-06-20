@@ -287,9 +287,9 @@ const sheetTabButtons = Array.from(document.querySelectorAll("[data-sheet-tab]")
 loginForm.addEventListener("submit", handleLogin);
 appLogo.addEventListener("click", () => switchPage("dashboard"));
 sidebarLogo?.addEventListener("click", () => switchPage("dashboard"));
-settingsButton.addEventListener("click", openSettingsPage);
+settingsButton?.addEventListener("click", openSettingsPage);
 controlSettingsButton?.addEventListener("click", openSettingsPage);
-logoutButton.addEventListener("click", handleLogout);
+logoutButton?.addEventListener("click", handleLogout);
 controlLogoutButton?.addEventListener("click", handleLogout);
 sidebarNavButtons.forEach((button) => {
   button.addEventListener("click", () => {
