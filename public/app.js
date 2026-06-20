@@ -369,13 +369,13 @@ exportSheetSelect?.addEventListener("change", () => {
 });
 clientCards.addEventListener("click", handleClientCardClick);
 clientSearchInput?.addEventListener("input", renderClientTabs);
-openLeverschemaFromClientsButton.addEventListener("click", () => switchPage("leverschema"));
-exportLeverschemaFromClientsButton.addEventListener("click", exportLeverschemaWorkbook);
+openLeverschemaFromClientsButton?.addEventListener("click", () => switchPage("leverschema"));
+exportLeverschemaFromClientsButton?.addEventListener("click", exportLeverschemaWorkbook);
 openStockButton?.addEventListener("click", () => switchPage("stock"));
 backToClientsFromStockButton?.addEventListener("click", () => switchPage("clients"));
 stockFileInput?.addEventListener("change", handleStockUpload);
 exportStockButton?.addEventListener("click", exportStockWorkbook);
-openLaadschemaButton.addEventListener("click", () => {
+openLaadschemaButton?.addEventListener("click", () => {
   switchPage("laadschema");
   initializeLaadschema();
 });
@@ -1673,6 +1673,7 @@ function handleHaviUienSettingsInput() {
 }
 
 function renderClientsLeverschemaCard() {
+  if (!openLeverschemaFromClientsButton || !exportLeverschemaFromClientsButton) return;
   const entries = getCurrentSessionLeverschemaEntries();
   const totalEntries = entries.length;
 
