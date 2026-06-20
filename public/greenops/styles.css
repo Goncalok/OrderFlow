@@ -5866,3 +5866,25 @@ button,
 .client-card-button::before {
   content: none !important;
 }
+
+/* Keep every navigation item on the same left alignment axis. */
+.sidebar-nav {
+  align-items: stretch;
+}
+
+.sidebar-nav-item {
+  width: 100%;
+  justify-content: flex-start !important;
+  text-align: left;
+}
+
+.sidebar-nav-icon {
+  display: grid;
+  flex: 0 0 18px;
+  place-items: center;
+}
+
+.sidebar-nav-item > span:last-child {
+  min-width: 0;
+  text-align: left;
+}
