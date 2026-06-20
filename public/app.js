@@ -73,6 +73,9 @@ const state = {
   haviUienSettings: loadHaviUienSettings(),
   activeWorkSession: null,
   stockItems: [],
+  mancoMetricsByClient: {},
+  mancoMetricsSessionId: "",
+  mancoMetricsRefreshId: 0,
   currentPage: "dashboard",
   currentLeverschemaSheet: "Monday-Thursday",
   settingsClient: DASHBOARD_CLIENTS[0],
@@ -728,6 +731,9 @@ async function refreshTeamState() {
     await tryMigrateIndexedDBToCloud();
     await mirrorSessionsToIndexedDB(state.teamSessions);
     persistLeverschemaLocalCache();
+    if (state.activeWorkSession) {
+      void refreshMancoMetricsForActiveSession();
+    }
   } catch (err) {
     console.warn("Using offline session cache (server unavailable or not configured).", err);
     try {
@@ -850,6 +856,7 @@ async function showAppShell(user) {
   appShell.classList.remove("hidden");
   updateHeaderAccountInfo();
   await hydrateWorkSessionForUser();
+  await refreshMancoMetricsForActiveSession();
   startTeamStateSync(); // Start syncing team state
   switchPage(getInitialOrderFlowPage());
 }
@@ -1187,6 +1194,8 @@ async function handleWorkSessionCreate(event) {
 
     const storedSession = state.teamSessions.find((entry) => entry.id === session.id) || session;
     state.activeWorkSession = storedSession;
+    state.mancoMetricsByClient = {};
+    state.mancoMetricsSessionId = storedSession.id || "";
     state.clientWorkspaces = migrateClientWorkspaces(storedSession.workspaces || {});
     state.activeWorkSession.workspaces = state.clientWorkspaces;
     await mirrorSessionsToIndexedDB(state.teamSessions);
@@ -1379,7 +1388,92 @@ function renderClientTabs() {
 function getClientDashboardMetrics(client) {
   const canonical = canonicalClientName(client);
   const metricOrders = getClientMetricOrders(canonical);
-  return summarizeClientMetricOrders(metricOrders);
+  const workspaceMetrics = summarizeClientMetricOrders(metricOrders);
+  const reportMetrics = state.mancoMetricsByClient[canonical];
+  if (!reportMetrics) return workspaceMetrics;
+
+  return {
+    ...workspaceMetrics,
+    deliveryPoints: reportMetrics.deliveryPoints || workspaceMetrics.deliveryPoints,
+    orders: reportMetrics.orders || workspaceMetrics.orders,
+    ordered: reportMetrics.ordered,
+    manco: reportMetrics.manco,
+    mancoRate: reportMetrics.ordered ? (reportMetrics.manco / reportMetrics.ordered) * 100 : 0,
+  };
+}
+
+async function refreshMancoMetricsForActiveSession() {
+  const activeSession = state.activeWorkSession;
+  const activeSessionId = String(activeSession?.id || "").trim();
+  const activeSessionDate = String(activeSession?.date || "").trim();
+  const refreshId = ++state.mancoMetricsRefreshId;
+
+  if (!activeSessionId && !activeSessionDate) {
+    state.mancoMetricsByClient = {};
+    state.mancoMetricsSessionId = "";
+    return;
+  }
+
+  try {
+    const response = await fetch("/api/sessions", { credentials: "include", cache: "no-store" });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || refreshId !== state.mancoMetricsRefreshId) return;
+
+    const allSessions = Array.isArray(payload.sessions) ? payload.sessions : [];
+    let reportSessions = activeSessionId
+      ? allSessions.filter((entry) => String(entry?.workSessionId || "") === activeSessionId)
+      : [];
+    if (!reportSessions.length && activeSessionDate) {
+      reportSessions = allSessions.filter((entry) => String(entry?.date || "") === activeSessionDate);
+    }
+
+    state.mancoMetricsByClient = buildMancoMetricsByClient(reportSessions);
+    state.mancoMetricsSessionId = activeSessionId || activeSessionDate;
+    if (state.currentPage === "clients") renderClientTabs();
+  } catch {
+    // Keep the workspace calculation as a useful offline fallback.
+  }
+}
+
+function buildMancoMetricsByClient(reportSessions) {
+  const metricsByClient = {};
+
+  reportSessions.forEach((session) => {
+    const preview = session?.preview;
+    if (!preview || typeof preview !== "object") return;
+
+    const canonical = canonicalClientName(preview.client || preview.greenopsCustomer || "");
+    if (!canonical) return;
+
+    const items = Array.isArray(preview.items) ? preview.items : [];
+    const itemOrdered = items.reduce((total, item) => total + parseMetricNumber(item?.orderedQuantity ?? item?.ordered ?? 0), 0);
+    const itemManco = items.reduce((total, item) => total + parseMetricNumber(item?.shortageQuantity ?? item?.manco ?? item?.shortage ?? 0), 0);
+    const ordered = parseMetricNumber(preview.orderedTotal) || itemOrdered;
+    const manco = parseMetricNumber(preview.shortageTotal) || itemManco;
+    const deliveryPoint = String(preview.deliveryPoint || preview.greenopsFatrans || "").trim();
+
+    if (!metricsByClient[canonical]) {
+      metricsByClient[canonical] = { ordered: 0, manco: 0, orders: 0, deliveryPointKeys: new Set() };
+    }
+
+    const metrics = metricsByClient[canonical];
+    metrics.ordered += ordered;
+    metrics.manco += manco;
+    metrics.orders += 1;
+    if (deliveryPoint) metrics.deliveryPointKeys.add(normalizeText(deliveryPoint));
+  });
+
+  return Object.fromEntries(
+    Object.entries(metricsByClient).map(([client, metrics]) => [
+      client,
+      {
+        ordered: metrics.ordered,
+        manco: metrics.manco,
+        orders: metrics.orders,
+        deliveryPoints: metrics.deliveryPointKeys.size,
+      },
+    ]),
+  );
 }
 
 function getClientMetricOrders(client) {
@@ -2281,6 +2375,9 @@ async function saveOrdersForShortages(file, options = {}) {
       return payload.error || "Could not save this order to Manco´s.";
     }
     const savedCount = Array.isArray(payload.savedSessions) ? payload.savedSessions.length : 0;
+    if (targetSession?.id === state.activeWorkSession?.id) {
+      void refreshMancoMetricsForActiveSession();
+    }
     return `${savedCount} order${savedCount === 1 ? "" : "s"} available in Manco´s.`;
   } catch {
     return "Could not reach Manco´s sync.";
